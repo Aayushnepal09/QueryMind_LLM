@@ -9,7 +9,7 @@ This project bridges the gap between non-technical users and databases. Users ca
 * **LLM Engine:** Google Gemini Pro
 * **Frontend:** Streamlit
 * **Language:** Python 3.x
-* **Database:** SQLite3
+* **Database:** PostgreSQL
 
 ## 🌟 Key Features
 * **Natural Language Processing:** Leverages Google's state-of-the-art Generative AI for complex query generation.
