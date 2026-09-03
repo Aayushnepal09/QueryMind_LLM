@@ -24,7 +24,10 @@
 | git remote | `origin` → Aayushnepal09/QueryMind_LLM ✅ |
 | `.env` in repo | absent — secrets currently live in Streamlit Cloud `st.secrets` ⚠️ |
 | BIRD dev set | not downloaded ⚠️ |
-| LLM API keys | Gemini only (via Streamlit secrets); no Anthropic/OpenAI key confirmed ⚠️ |
+| LLM API keys | Gemini only (via Streamlit secrets), **not yet in a local `.env`** ⚠️ |
+| Ollama | installed 2026-09-03 at `%LOCALAPPDATA%\Programs\Ollama` ✅ |
+| Local model | `qwen2.5-coder:7b` (4.7 GB) pulled, smoke-tested ✅ |
+| Free disk (C:) | 20.2 GB — **tight**; BIRD extracted may need ~5 GB ⚠️ |
 
 ---
 
@@ -78,6 +81,9 @@ Existing repo contents at `main` (commit `1e90f3c`):
 
 ## Open decisions
 
+- [x] Local model — RESOLVED. Ollama + `qwen2.5-coder:7b`. Smoke test 2026-09-03: correct 5-table-join revenue query at temp 0. **Measured throughput ~10 tok/s output, 20.4 s for 200 tokens on the 1660 Ti.** Budget implication: a 50-question dev subset at k=5 ≈ 250 generations ≈ 45-60 min locally. Full 1,534-question dev run at k=5 is an overnight job. Caching is mandatory.
+- [x] GPT4All removed 2026-09-03 — app was already uninstalled, only orphaned data remained. Deleted `%LOCALAPPDATA%
+omic.ai` (4.3 GB: Meta-Llama-3-8B-Instruct.Q4_0.gguf + chat history). Chat history backed up to the session scratchpad.
 - [ ] Primary LLM — **hard constraint: $0 budget.** Plan is Gemini free tier (already wired) as primary + a local Ollama model (Qwen2.5-Coder-7B, Q4) as the second provider and unlimited-iteration workhorse. Satisfies spec §13's two-provider comparison for free. Local model is slow on a 1660 Ti — fine for the 50-question dev subset, painful for full 1,534-question runs. Aggressive response caching (spec §11) is not optional here, it is the budget.
 - [x] Commit attribution — RESOLVED. `.git/hooks/commit-msg` strip hook installed + `.claude/settings.local.json` attribution overrides. Verified clean on first commit.
 - [ ] Tracing backend: Langfuse vs Phoenix (spec §5, pick one).
@@ -98,4 +104,7 @@ Existing repo contents at `main` (commit `1e90f3c`):
 - Installed `.git/hooks/commit-msg` attribution strip hook + `.claude/settings.local.json`; verified the first commit stored no trailer.
 - Untracked `.idea/` and `normalized.db`; moved the DB to `data/`; repointed `populate_db.py`; extended `.gitignore` (data/, mlruns/, caches, IDE, secrets).
 - Committed as `chore(repo): untrack IDE config and benchmark DB, extend gitignore`.
-- **Next action:** decide on the SSH key, then finish `chore/project-scaffold` (pyproject via uv, §10 directory layout, `.env.example`).
+- **Purged git history** with `git filter-repo`: removed `aayush`, `aayush.pub`, `normalized.db` from all commits. `.git` 4.4 MB → 124 KB. Pre-rewrite backup bundle in session scratchpad. **Force-push to origin still PENDING — user must run it** (sandbox blocked the push).
+- Installed Ollama + `qwen2.5-coder:7b`; smoke-tested SQL generation.
+- Removed GPT4All leftovers (4.3 GB freed).
+- **Next action:** user force-pushes the rewritten history; then finish `chore/project-scaffold` (pyproject via uv, §10 directory layout, `.env.example`).
