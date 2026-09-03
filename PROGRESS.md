@@ -79,6 +79,16 @@ Existing repo contents at `main` (commit `1e90f3c`):
 
 ---
 
+## Locked decisions
+
+**Eval set size (2026-09-03):** BIRD dev, evaluated on a **fixed, seeded, difficulty-stratified 500-question subset**. 50-question subset for the daily dev loop; full 1,534 run optional at phase boundaries only.
+
+*Rationale:* this is an evaluation set, not training data — nothing is fine-tuned (spec §3). Subset size is a statistical-power question. At n=500 the 95% CI on an accuracy near 50% is ±4.4%, which supports the ~6-10 point delta Phase 2 realistically produces. At n=50 the CI is ±13.9% and any claimed delta is noise. Full-set n=1534 gives ±2.5% but costs an overnight local run at k=5.
+
+*Reporting rule:* always report accuracy **with its confidence interval and n** (e.g. "58.2% ± 4.4%, n=500"). Never quote a bare number. The subset must be seeded and its question ids committed to `results/` so runs are comparable.
+
+*Deviation from CLAUDE.md:* spec §8 implies full-dev-set runs in Phases 1-2. We substitute the 500-question stratified subset. Note this in the README.
+
 ## Open decisions
 
 - [x] Local model — RESOLVED. Ollama + `qwen2.5-coder:7b`. Smoke test 2026-09-03: correct 5-table-join revenue query at temp 0. **Measured throughput ~10 tok/s output, 20.4 s for 200 tokens on the 1660 Ti.** Budget implication: a 50-question dev subset at k=5 ≈ 250 generations ≈ 45-60 min locally. Full 1,534-question dev run at k=5 is an overnight job. Caching is mandatory.
