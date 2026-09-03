@@ -10,8 +10,8 @@
 
 ## Current state
 
-**Phase:** 0 — in progress (`chore/project-scaffold`)
-**Active branch:** `chore/project-scaffold` (off `sqlsentinel`, off `main`)
+**Phase:** 0 — **COMPLETE** ✅ (gate met: one command produces an accuracy number)
+**Active branch:** `feat/eval-harness` (off `sqlsentinel`)
 **Integration branch `sqlsentinel`:** created locally, **not yet pushed**
 **Hardware:** GTX 1660 Ti (6 GB VRAM), 15.8 GB RAM — relevant to the local-LLM decision below
 
@@ -23,11 +23,11 @@
 | Docker | 28.3.2 ✅ |
 | git remote | `origin` → Aayushnepal09/QueryMind_LLM ✅ |
 | `.env` in repo | absent — secrets currently live in Streamlit Cloud `st.secrets` ⚠️ |
-| BIRD dev set | not downloaded ⚠️ |
+| BIRD dev set | **`dev_20240627`** extracted to `data/bird/dev_20240627/` (1.4 GB, 11 DBs, 1,534 questions) ✅ |
 | LLM API keys | Gemini only (via Streamlit secrets), **not yet in a local `.env`** ⚠️ |
 | Ollama | installed 2026-09-03 at `%LOCALAPPDATA%\Programs\Ollama` ✅ |
 | Local model | `qwen2.5-coder:7b` (4.7 GB) pulled, smoke-tested ✅ |
-| Free disk (C:) | 20.2 GB — **tight**; BIRD extracted may need ~5 GB ⚠️ |
+| Free disk (C:) | ~19 GB after BIRD extract — fine ✅ |
 
 ---
 
@@ -62,7 +62,7 @@ Existing repo contents at `main` (commit `1e90f3c`):
 
 ## Phase checklist
 
-- [ ] **Phase 0** — `chore/project-scaffold`, `feat/eval-harness`. Done when one command produces an accuracy number.
+- [x] **Phase 0** — DONE 2026-09-03. `python -m sqlsentinel.eval --split eval_500 --predictor stub` → `EX 3.0% ± 1.5 (n=500)`.
 - [ ] **Phase 1** — `feat/llm-client`, `feat/baseline-agent`. Done when a baseline EX number exists with cost + latency.
 - [ ] **Phase 2** — few-shot retrieval, schema linking, self-correction. Done at technique → EX → Δ → cost table.
 - [ ] **Phase 3** — confidence scorer, risk router, review UI. Done at the money metric.
@@ -71,9 +71,14 @@ Existing repo contents at `main` (commit `1e90f3c`):
 
 ## Recorded numbers
 
-| Run | Config | Subset | EX | Cost | Latency | MLflow run |
+| Run | Config | Split | n | EX | 95% CI | Scoring |
 |---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — |
+| 2026-09-03 | stub (`SELECT 1`) | dev_50 | 50 | 4.0% | ±6.2 | 1.3 s |
+| 2026-09-03 | stub (`SELECT 1`) | eval_500 | 500 | **3.0%** | ±1.5 | 37.8 s |
+
+**The chance floor is ~3%, not 0%** — `SELECT 1` returns `{(1,)}` and some gold
+queries legitimately return a scalar 1 under set-equality scoring. Read every
+accuracy against a 3% floor. See `results/baseline-floor.md`.
 
 (Fill after every eval run. Never delete a row, including regressions.)
 
@@ -117,4 +122,7 @@ omic.ai` (4.3 GB: Meta-Llama-3-8B-Instruct.Q4_0.gguf + chat history). Chat histo
 - **Purged git history** with `git filter-repo`: removed `aayush`, `aayush.pub`, `normalized.db` from all commits. `.git` 4.4 MB → 124 KB. Pre-rewrite backup bundle in session scratchpad. **Force-push to origin still PENDING — user must run it** (sandbox blocked the push).
 - Installed Ollama + `qwen2.5-coder:7b`; smoke-tested SQL generation.
 - Removed GPT4All leftovers (4.3 GB freed).
-- **Next action:** user force-pushes the rewritten history; then finish `chore/project-scaffold` (pyproject via uv, §10 directory layout, `.env.example`).
+- Finished `chore/project-scaffold`; merged to `sqlsentinel` with `--no-ff`.
+- **Phase 0 complete on `feat/eval-harness`:** BIRD `dev_20240627` extracted; splits generated and committed to `results/splits.json`; official scorer wrapped; 12 tests passing including a gold-SQL-scores-100% integrity test.
+- Found and guarded a real bug in the official BIRD script: `compute_acc_by_diff` divides by empty difficulty buckets.
+- **Next action:** user force-pushes rewritten history; then Phase 1 `feat/llm-client` (Ollama + Gemini behind one interface, with the response cache).
