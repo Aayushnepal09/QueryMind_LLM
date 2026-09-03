@@ -21,6 +21,7 @@ not assumed.
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -97,6 +98,65 @@ class Schema:
             for t in self.tables
             for local, ftable, fcol in t.foreign_keys
         ]
+
+
+    def prune(self, question: str, evidence: str = "", min_tables: int = 2) -> Schema:
+        """Drop tables the question plausibly does not need (Phase 2).
+
+        Scores each table on lexical overlap between the question (plus BIRD's
+        evidence hint) and its table/column names, then keeps everything above a
+        relative threshold. Tables reachable by a foreign key from a kept table
+        are pulled back in, because join paths break silently otherwise -- a
+        pruned bridge table produces confidently wrong SQL rather than an error.
+
+        Conservative by design: with a mean schema of ~1,230 tokens there is no
+        token pressure forcing aggressive pruning, so the only thing to gain is
+        accuracy from a less distracting prompt, and the thing to lose is a
+        required table. Recall matters far more than precision here.
+        """
+        terms = _terms(f"{question} {evidence}")
+        if not terms:
+            return self
+
+        scores: dict[str, float] = {}
+        for t in self.tables:
+            name_hits = len(terms & _terms(t.name))
+            col_hits = sum(1 for c in t.columns if terms & _terms(c.name))
+            scores[t.name] = name_hits * 2.0 + col_hits
+
+        best = max(scores.values(), default=0.0)
+        if best == 0:
+            return self
+
+        keep = {n for n, s in scores.items() if s >= best * 0.25 and s > 0}
+        ranked = sorted(scores, key=lambda n: scores[n], reverse=True)
+        for n in ranked[:min_tables]:
+            keep.add(n)
+
+        # follow foreign keys out of the kept set, both directions
+        by_name = {t.name: t for t in self.tables}
+        frontier = set(keep)
+        while frontier:
+            nxt: set[str] = set()
+            for name in frontier:
+                for _, ref, _ in by_name[name].foreign_keys:
+                    if ref in by_name and ref not in keep:
+                        nxt.add(ref)
+                for other in self.tables:
+                    if other.name in keep:
+                        continue
+                    if any(ref == name for _, ref, _ in other.foreign_keys):
+                        nxt.add(other.name)
+            keep |= nxt
+            frontier = nxt
+
+        return Schema(db_id=self.db_id, tables=[t for t in self.tables if t.name in keep])
+
+
+def _terms(text: str) -> set[str]:
+    """Lowercased word set, splitting snake_case and camelCase identifiers."""
+    parts = re.split(r"[^A-Za-z0-9]+", re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", text))
+    return {p.lower() for p in parts if len(p) > 2}
 
 
 def _quote(name: str) -> str:

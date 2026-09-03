@@ -114,7 +114,9 @@ class SQLGenerator:
         self.client = client
         self.max_tokens = max_tokens
 
-    def build_prompt(self, question: str, schema: Schema, evidence: str = "") -> str:
+    def build_prompt(
+        self, question: str, schema: Schema, evidence: str = "", prompt_prefix: str = ""
+    ) -> str:
         joins = schema.join_paths()
         evidence_block = (
             f"\nExternal knowledge (use this, it is required to answer correctly):\n"
@@ -122,12 +124,13 @@ class SQLGenerator:
             if evidence and evidence.strip()
             else ""
         )
-        return USER_TEMPLATE.format(
+        body = USER_TEMPLATE.format(
             schema=schema.to_prompt(),
             join_paths="\n".join(joins) if joins else "(none declared)",
             evidence_block=evidence_block,
             question=question,
         )
+        return f"{prompt_prefix}\n{body}" if prompt_prefix else body
 
     def generate(
         self,
@@ -136,6 +139,7 @@ class SQLGenerator:
         evidence: str = "",
         k: int = 1,
         temperature: float | None = None,
+        prompt_prefix: str = "",
     ) -> list[Candidate]:
         """Generate k candidates.
 
@@ -146,7 +150,7 @@ class SQLGenerator:
         if temperature is None:
             temperature = 0.0 if k == 1 else 0.7
 
-        user = self.build_prompt(question, schema, evidence)
+        user = self.build_prompt(question, schema, evidence, prompt_prefix)
         out = []
         for i in range(k):
             resp = self.client.complete(
