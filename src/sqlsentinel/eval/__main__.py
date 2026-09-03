@@ -14,6 +14,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from sqlsentinel.agent import BaselineAgent
 from sqlsentinel.eval.harness import BirdHarness
 from sqlsentinel.eval.subsets import build_splits, stratified_subsample
 
@@ -33,7 +34,7 @@ def stub_predictor(questions: list[dict]) -> dict[int, str]:
     return {q["question_id"]: "SELECT 1" for q in questions}
 
 
-PREDICTORS = {"stub": stub_predictor}
+PREDICTORS = {"stub": stub_predictor, "baseline": None}  # baseline built at runtime
 
 
 def load_split(name: str, bird_root: Path) -> list[int]:
@@ -55,6 +56,12 @@ def main() -> None:
     ap.add_argument("--subset", type=int, default=None,
                     help="stratified subsample of N questions from the split")
     ap.add_argument("--predictor", default="stub", choices=sorted(PREDICTORS))
+    ap.add_argument("--provider", default=None, choices=["ollama", "gemini"],
+                    help="LLM provider (default: SQLSENTINEL_PROVIDER)")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="concurrent generations; keep at 1 for ollama")
+    ap.add_argument("--no-evidence", action="store_true",
+                    help="ablate BIRD's evidence field")
     ap.add_argument("--bird-root", default=os.getenv("BIRD_DEV_ROOT", "data/bird/dev_20240627"))
     ap.add_argument("--num-cpus", type=int, default=4)
     ap.add_argument("--no-mlflow", action="store_true")
@@ -73,8 +80,21 @@ def main() -> None:
     questions = harness.questions(qids)
     print(f"predictor={args.predictor} split={args.split} n={len(qids)}")
 
+    agent = None
     t0 = time.time()
-    predictions = PREDICTORS[args.predictor](questions)
+    if args.predictor == "stub":
+        predictions = stub_predictor(questions)
+    else:
+        from sqlsentinel.llm import get_client
+
+        client = get_client(args.provider)
+        print(f"provider={client.provider} model={client.model} workers={args.workers}")
+        agent = BaselineAgent(
+            client=client,
+            db_root=bird_root / "dev_databases",
+            use_evidence=not args.no_evidence,
+        )
+        predictions = agent.predict(questions, workers=args.workers)
     gen_s = time.time() - t0
 
     t1 = time.time()
@@ -94,6 +114,9 @@ def main() -> None:
         with mlflow.start_run(run_name=f"{args.predictor}-{args.split}-n{len(qids)}"):
             mlflow.log_params({
                 "predictor": args.predictor,
+                "provider": getattr(agent.client, "provider", "none") if agent else "none",
+                "model": getattr(agent.client, "model", "none") if agent else "none",
+                "use_evidence": bool(agent.use_evidence) if agent else False,
                 "split": args.split,
                 "n": len(qids),
                 "bird_version": bird_root.name,
@@ -106,6 +129,7 @@ def main() -> None:
                 "ex_challenging": result.challenging,
                 "generation_seconds": gen_s,
                 "scoring_seconds": eval_s,
+                **({f"agent_{k}": v for k, v in agent.summary().items()} if agent else {}),
             })
         print("logged to MLflow")
 
