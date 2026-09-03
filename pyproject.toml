@@ -62,6 +62,9 @@ ignore = [
 # must never break the thing it observes.
 "src/sqlsentinel/tracing.py" = ["S110", "BLE001"]
 "tests/*" = ["S101"]
+# Emits Markdown prose; typographic minus, en dash and multiplication sign are
+# intentional there, not confusable-character mistakes in code.
+"scripts/build_report.py" = ["RUF001"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
