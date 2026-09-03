@@ -200,3 +200,5 @@ results/**/*.tmp
 
 # uv
 .venv/
+mlflow.db
+mlartifacts/
