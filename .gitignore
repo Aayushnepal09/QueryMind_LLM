@@ -175,3 +175,28 @@ pyrightconfig.json
 .env
 .streamlit
 normalized.db
+# --- SQLSentinel ---
+# IDE
+.idea/
+.vscode/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Benchmark data (BIRD databases, local SQLite) - never commit
+data/
+*.sqlite
+*.sqlite3
+
+# Eval tracking / caches
+mlruns/
+.llm_cache/
+results/**/*.tmp
+
+# Secrets
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# uv
+.venv/
