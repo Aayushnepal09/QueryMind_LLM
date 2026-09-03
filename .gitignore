@@ -202,3 +202,4 @@ results/**/*.tmp
 .venv/
 mlflow.db
 mlartifacts/
+logs/
