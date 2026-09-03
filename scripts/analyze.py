@@ -127,6 +127,18 @@ def main() -> None:
     # per-question labels, needed to fit and score the confidence model
     correct = per_question_correct(harness, traces)
 
+    # Cross-check our per-question labelling against the official aggregate.
+    # They are computed by different code paths (our executor + normalization vs
+    # BIRD's script), so agreement is real evidence the labels are sound. A
+    # divergence would silently corrupt calibration and the routing curve.
+    ours = 100.0 * sum(correct) / len(correct)
+    if abs(ours - result.accuracy) > 0.51:  # half a question at n=100
+        raise SystemExit(
+            f"per-question labels disagree with the official scorer: "
+            f"{ours:.1f}% vs {result.accuracy:.1f}%. Calibration and routing "
+            f"would be built on wrong labels; fix before reporting."
+        )
+
     feats = []
     for t in traces:
         rec = harness.by_id[t.question_id]

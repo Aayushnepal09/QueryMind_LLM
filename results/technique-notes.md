@@ -67,3 +67,45 @@ wins by default because there is nothing meaningful to prune. Mean schema is
 either. Schema linking is a technique for wide schemas; BIRD dev does not have
 them. It would need BIRD *train* (or a genuinely wide warehouse schema) to be
 tested properly.
+
+## Self-correction (max 2 rounds)
+
+**Result: 62.0% — identical to baseline. But it did not do nothing.**
+
+| Measurement | Baseline | Self-correction |
+|---|---:|---:|
+| Queries that failed to execute (pre-correction) | 4 | 4 |
+| Correction attempted | 0 | 4 |
+| Queries that ultimately executed successfully | 46/50 | **48/50** |
+| Execution accuracy | 62.0% | **62.0%** |
+
+The loop worked exactly as designed: it caught all 4 execution errors, and fixed
+2 of them into queries that run. Accuracy did not move, which means **both
+repaired queries now execute and return the wrong answer.**
+
+### This is a worse outcome than it looks
+
+Self-correction converted two *loud* failures into two *silent* ones. An
+execution error announces itself — the caller gets an exception and knows not to
+trust the result. A syntactically valid query returning wrong rows looks exactly
+like success.
+
+It also degrades the confidence signal. `execution_errored` is one of the
+strongest negative features in the scorer (CLAUDE.md §6 lists it as such), and
+self-correction is precisely a mechanism for destroying that feature's
+information while leaving the underlying error in place.
+
+### What follows from it
+
+1. **Self-correction should not be enabled without the routing layer.** On its
+   own it trades detectability for a cosmetic improvement in execution rate.
+2. `n_correction_rounds` is retained as a confidence feature specifically
+   because a query that needed repairing is less trustworthy — the trace keeps
+   `execution_errored_pre_correction` separately from the post-correction state
+   so the signal survives the repair.
+3. The two queries that failed both rounds (`1262`, `1350`) are genuinely hard,
+   not transient: two attempts with the error message in context did not help.
+
+**Caveat:** n=4 corrected queries. This is a mechanism observation, not a
+statistically supported claim about correction rates. The direction of the
+effect is what matters, and it is visible in the trace regardless of sample size.
