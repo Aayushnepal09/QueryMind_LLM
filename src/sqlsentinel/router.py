@@ -14,17 +14,17 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 import numpy as np
 
-from sqlsentinel.executor import assert_read_only, UnsafeQueryError
+from sqlsentinel.executor import UnsafeQueryError, assert_read_only
 
 DEFAULT_THRESHOLD = 0.5
 LARGE_RESULT_ROWS = 1000
 
 
-class Decision(str, Enum):
+class Decision(StrEnum):
     AUTO = "AUTO"
     REVIEW = "REVIEW"
 

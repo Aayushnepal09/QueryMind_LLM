@@ -17,6 +17,7 @@ containing evaluation question ids.
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 from dataclasses import asdict, dataclass
@@ -192,7 +193,7 @@ def reliability_curve(probs, correct, n_bins: int = 10):
     probs, correct = np.asarray(probs), np.asarray(correct)
     edges = np.linspace(0, 1, n_bins + 1)
     out = []
-    for lo, hi in zip(edges[:-1], edges[1:]):
+    for lo, hi in itertools.pairwise(edges):
         m = (probs >= lo) & (probs < hi if hi < 1 else probs <= hi)
         if m.sum():
             out.append({

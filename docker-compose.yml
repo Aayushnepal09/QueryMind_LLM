@@ -1,0 +1,44 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      SQLSENTINEL_PROVIDER: ${SQLSENTINEL_PROVIDER:-ollama}
+      # host.docker.internal reaches Ollama running on the host, so the model
+      # stays on the host GPU rather than being containerised without one.
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:7b}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      BIRD_DEV_ROOT: /app/data/bird/dev_20240627
+      ROUTING_THRESHOLD: ${ROUTING_THRESHOLD:-0.5}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://phoenix:6006/v1/traces
+    volumes:
+      - ./data:/app/data:ro
+      - ./results:/app/results
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    depends_on: [phoenix]
+
+  review:
+    build: .
+    command: >
+      streamlit run app/review_ui.py
+      --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    ports: ["8501:8501"]
+    environment:
+      BIRD_DEV_ROOT: /app/data/bird/dev_20240627
+    volumes:
+      - ./data:/app/data:ro
+      - ./results:/app/results
+
+  # Arize Phoenix: self-hosted trace viewer, no account or key required.
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"
+    environment:
+      PHOENIX_WORKING_DIR: /data
+    volumes:
+      - phoenix-data:/data
+
+volumes:
+  phoenix-data:

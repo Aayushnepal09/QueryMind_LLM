@@ -19,6 +19,7 @@ Postgres with none of these (see docs/migration-notes.md, defect 2).
 
 from __future__ import annotations
 
+import contextlib
 import re
 import sqlite3
 import threading
@@ -130,10 +131,9 @@ class SQLiteExecutor:
                 result.error = f"{type(e).__name__}: {e}"
             finally:
                 if conn is not None:
-                    try:
+                    # interrupt() races with a query that already finished
+                    with contextlib.suppress(Exception):
                         conn.interrupt()
-                    except Exception:
-                        pass
                     conn.close()
                 done.set()
 
