@@ -25,6 +25,7 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "streamlit>=1.36",
     "bcrypt>=4.1",
+    "func-timeout>=4.3.5",
 ]
 
 [project.optional-dependencies]
