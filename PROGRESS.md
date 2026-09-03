@@ -10,9 +10,10 @@
 
 ## Current state
 
-**Phase:** 0 — not started (audit + eval harness)
-**Active branch:** `main` (original QueryMind, to remain untouched)
-**Integration branch `sqlsentinel`:** not created yet
+**Phase:** 0 — in progress (`chore/project-scaffold`)
+**Active branch:** `chore/project-scaffold` (off `sqlsentinel`, off `main`)
+**Integration branch `sqlsentinel`:** created locally, **not yet pushed**
+**Hardware:** GTX 1660 Ti (6 GB VRAM), 15.8 GB RAM — relevant to the local-LLM decision below
 
 ### Environment (verified 2026-09-03)
 | Thing | Status |
@@ -77,10 +78,11 @@ Existing repo contents at `main` (commit `1e90f3c`):
 
 ## Open decisions
 
-- [ ] Primary LLM: Gemini (already wired, key exists) vs Claude vs GPT-4o. Spec §13 says decide on cost-per-correct-answer after Phase 1 against two providers.
-- [ ] Commit attribution: `CLAUDE.md` §2 forbids AI trailers; this environment's harness injects `Co-Authored-By: Claude Opus 5`. Needs a `.git/hooks/commit-msg` strip hook to enforce the spec. **Unresolved — confirm with user.**
+- [ ] Primary LLM — **hard constraint: $0 budget.** Plan is Gemini free tier (already wired) as primary + a local Ollama model (Qwen2.5-Coder-7B, Q4) as the second provider and unlimited-iteration workhorse. Satisfies spec §13's two-provider comparison for free. Local model is slow on a 1660 Ti — fine for the 50-question dev subset, painful for full 1,534-question runs. Aggressive response caching (spec §11) is not optional here, it is the budget.
+- [x] Commit attribution — RESOLVED. `.git/hooks/commit-msg` strip hook installed + `.claude/settings.local.json` attribution overrides. Verified clean on first commit.
 - [ ] Tracing backend: Langfuse vs Phoenix (spec §5, pick one).
-- [ ] `normalized.db` — keep in git history or purge?
+- [ ] **🔴 SSH KEYPAIR IN GIT HISTORY — UNRESOLVED, ACTION REQUIRED.** Commit `f90dfdc` added `aayush` (7-line file, shape of an OpenSSH ed25519 private key) and `aayush.pub`. Deleted in `18bec47`/`f4045a9` but **still present in history and on GitHub**. Deleting the file did not remove it. Required: (1) treat the key as compromised and revoke it wherever it is authorized (GitHub SSH keys, any server), (2) generate a fresh keypair, (3) optionally purge history with `git filter-repo` + force-push. Step 1 is the one that actually matters. Not actioned — needs user decision.
+- [ ] `normalized.db` — untracked and moved to `data/`, but the 15 MB blob is still in history (only ~4.4 MB packed). Purge only if we are already rewriting history for the key.
 
 ---
 
@@ -91,4 +93,9 @@ Existing repo contents at `main` (commit `1e90f3c`):
 - Audited the existing QueryMind code (see audit table above).
 - Verified toolchain (Python 3.12.7, uv, Docker all present).
 - Created this file.
-- **No code written, no branches created.** Next action: Phase 0 `chore/project-scaffold`.
+- **Audited git history and found an SSH keypair committed in `f90dfdc`** (see Open decisions). Not fixed — needs user action.
+- Created branches `sqlsentinel` and `chore/project-scaffold`.
+- Installed `.git/hooks/commit-msg` attribution strip hook + `.claude/settings.local.json`; verified the first commit stored no trailer.
+- Untracked `.idea/` and `normalized.db`; moved the DB to `data/`; repointed `populate_db.py`; extended `.gitignore` (data/, mlruns/, caches, IDE, secrets).
+- Committed as `chore(repo): untrack IDE config and benchmark DB, extend gitignore`.
+- **Next action:** decide on the SSH key, then finish `chore/project-scaffold` (pyproject via uv, §10 directory layout, `.env.example`).
