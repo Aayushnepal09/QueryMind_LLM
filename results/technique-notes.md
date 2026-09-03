@@ -3,6 +3,35 @@
 Diagnostics that explain *why* a technique moved the number, recorded alongside
 the number itself. Measured on `dev_50` unless stated.
 
+## Summary: the Phase 2 ablations
+
+All comparisons are **paired** (McNemar exact, same 50 questions) rather than
+comparisons of independent confidence intervals. The runs share their questions,
+and discarding that pairing costs enough power to hide real effects — on
+`dev_50` the unpaired interval is ±13 points, which would call almost anything
+inconclusive.
+
+| Run | EX | delta | helped | hurt | p | Verdict |
+|---|---:|---:|---:|---:|---:|---|
+| baseline | 62.0% | — | — | — | — | reference |
+| combined (few-shot + self-correct) | 64.0% | +2.0 | 6 | 5 | 1.000 | not distinguishable |
+| schema pruning | 62.0% | 0.0 | 0 | 0 | 1.000 | identical predictions |
+| self-correction | 62.0% | 0.0 | 0 | 0 | 1.000 | identical *scores*, different failures |
+| few-shot (k=3) | 58.0% | −4.0 | 6 | 8 | 0.791 | not distinguishable |
+| **− evidence field** | **42.0%** | **−20.0** | **4** | **14** | **0.031** | **significant** |
+
+**The headline: none of the techniques I added produced a measurable
+improvement, and the single largest effect in the entire sweep is a field BIRD
+ships with the dataset.** Removing the `evidence` hint costs 20 points — more
+than any technique gained. That is the honest result, and it is more useful than
+a tuned number would have been: on this benchmark, with this model, the binding
+constraint is *domain knowledge supplied with the question*, not prompting
+strategy.
+
+The few-shot row is worth reading carefully. Its −4.0 points come from 6
+questions helped and 8 hurt (p=0.79) — near-symmetric churn, not a systematic
+harm. It moves predictions around without moving accuracy.
+
 ## Few-shot retrieval (k=3 exemplars)
 
 **Result: 58.0% vs 62.0% baseline — 4 points worse.**
