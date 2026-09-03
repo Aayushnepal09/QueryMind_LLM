@@ -138,7 +138,7 @@ def copy_table(sqlite_conn, pg_conn, sqlite_table, pg_table, sqlite_cols, pg_col
 if __name__ == "__main__":
 
 
-    SQLITE_DB_PATH = "normalized.db"
+    SQLITE_DB_PATH = "data/normalized.db"
 
     if not Path(SQLITE_DB_PATH).exists():
         raise FileNotFoundError(f"SQLite DB not found: {SQLITE_DB_PATH}")
