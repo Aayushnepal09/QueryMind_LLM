@@ -35,3 +35,35 @@ from exemplar quality. Both are cheap; neither has been run.
 **Not done:** tuning the retriever until the number improves. With a ±13 margin
 that would be fitting to noise, and `dev_50` is the development loop, not
 evidence.
+
+## Schema pruning
+
+**Result: 62.0% — identical to the 62.0% baseline, to the question.**
+
+Predicted before the run from a structural diagnostic, and confirmed exactly:
+
+| Measurement | Value |
+|---|---|
+| Tables retained across `dev_50` | 351/356 (99%) |
+| Mean prompt reduction | 1.3% |
+| BIRD dev database sizes | 3–13 tables |
+
+The pruner scores tables on lexical overlap with the question, then re-adds
+anything reachable by a foreign key from a kept table. On BIRD's dev databases —
+small and densely FK-connected — that closure pulls back essentially everything
+the lexical scoring dropped. The technique is a no-op here, and the identical
+accuracy is the expected consequence, not a coincidence.
+
+**Why the FK closure stays.** Removing it would prune more aggressively and make
+the technique *look* like it does something. It would also drop bridge tables
+that joins depend on, and a missing bridge table does not produce an error — it
+produces confidently wrong SQL. A silent accuracy loss traded for a visible
+token saving is a bad trade on a benchmark scored by exact result sets.
+
+**Answering CLAUDE.md §13** ("Is schema linking worth it on BIRD's larger
+databases, or does full-schema context win?"): on BIRD *dev*, full-schema context
+wins by default because there is nothing meaningful to prune. Mean schema is
+~1,230 tokens and the largest is 3,128, so there is no token pressure to relieve
+either. Schema linking is a technique for wide schemas; BIRD dev does not have
+them. It would need BIRD *train* (or a genuinely wide warehouse schema) to be
+tested properly.

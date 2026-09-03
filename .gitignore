@@ -203,3 +203,5 @@ results/**/*.tmp
 mlflow.db
 mlartifacts/
 logs/
+results/review_queue.json
+results/review_decisions.db
