@@ -134,6 +134,7 @@ traces.
 | Question length | r = −0.224, p < 0.0001 | `results/findings.json` |
 | Evidence field | +20 points, p = 0.031 | `results/comparisons.json` |
 | Benchmark | BIRD dev `dev_20240627`, 1,534 questions, 11 databases | `docs/reproducing.md` |
+| Before/after diff | `git diff v0-querymind main` | tag `v0-querymind` |
 | Tests | 264 passing, 92% coverage | `uv run pytest --cov=sqlsentinel` |
 
 **Do not round these upward.** The credibility of the whole project rests on the

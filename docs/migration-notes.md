@@ -2,12 +2,20 @@
 
 Audit performed 2026-09-03 against `main` @ `1e90f3c`, per CLAUDE.md §1 ("audit before rewriting").
 
-> **Where the original lives.** Every file described below still exists on the
-> `main` branch, untouched. They were removed from `sqlsentinel` once their
-> reusable parts had been ported, because carrying a superseded application
-> alongside its replacement makes the repository harder to read, not easier to
-> verify. CLAUDE.md §1 asks that the "before" state be preserved as evidence —
-> `main` is that evidence. `git diff main sqlsentinel` is the whole story.
+> **Where the original lives.** Every file described below is preserved at the
+> tag **`v0-querymind`** and the branch **`querymind-original`**, untouched.
+> They were removed from the working branch once their reusable parts had been
+> ported, because carrying a superseded application alongside its replacement
+> makes the repository harder to read, not easier to verify.
+>
+> CLAUDE.md §1 asks that the "before" state be preserved as evidence. It is —
+> just not on `main`, which now carries the rebuild so that anyone landing on
+> the repository sees the finished work rather than the thing it replaced.
+>
+> ```bash
+> git diff v0-querymind main     # the whole transformation
+> git checkout v0-querymind      # the original, as it was
+> ```
 
 ## Inventory
 
@@ -59,7 +67,7 @@ Consequence: the Phase 1 baseline is a **naive zero-shot prompt**, which is an h
 
 ## What `sqlsentinel` does not carry
 
-Removed from this branch after the audit, all preserved on `main`:
+Removed after the audit, all preserved at `v0-querymind`:
 
 | Removed | Why |
 |---|---|

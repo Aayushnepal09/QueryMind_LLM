@@ -315,16 +315,21 @@ layers, because any single one can be defeated:
 
 ## What changed from QueryMind
 
-Full audit: [docs/migration-notes.md](docs/migration-notes.md). `main` still
-points at the original — the before state is evidence, not clutter.
+Full audit: [docs/migration-notes.md](docs/migration-notes.md). The original is
+preserved at tag **`v0-querymind`** and branch **`querymind-original`** — the
+before state is evidence, not clutter.
+
+```bash
+git diff v0-querymind main     # the entire rebuild, as one diff
+```
 
 **Kept** (all three from `streamlit_app.py`, the only real assets in 503 lines):
 the schema-context *shape*, the generation prompt, and the SQL extractor. Its
 Postgres DSN builder became `executor.postgres_dsn_from_env()`.
 
-The original application itself is **not carried on this branch** — it lives on
-`main`, untouched, which is what makes `git diff main sqlsentinel` the complete
-before/after.
+The original application itself is **not carried here** — it lives at
+`v0-querymind`, untouched, which is what makes `git diff v0-querymind main` the
+complete before/after.
 
 **Replaced:** the hardcoded `DATABASE_SCHEMA` string became live introspection
 across 11 databases. The extractor was hardened — the original stripped
