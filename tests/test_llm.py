@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import pytest
 
@@ -65,7 +64,7 @@ def test_sample_index_is_part_of_the_key(cache):
     ],
 )
 def test_every_key_component_changes_the_key(cache, kwargs):
-    base = dict(system="sys", user="user", temperature=0.0, sample_index=0)
+    base = {"system": "sys", "user": "user", "temperature": 0.0, "sample_index": 0}
     k1 = ResponseCache.key("p", "m", **base)
     k2 = ResponseCache.key("p", "m", **{**base, **kwargs})
     assert k1 != k2
@@ -103,7 +102,7 @@ def test_get_client_dispatch(monkeypatch, cache):
 
 def test_gemini_without_key_gives_actionable_error(monkeypatch, cache):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    with pytest.raises(RuntimeError, match="aistudio.google.com"):
+    with pytest.raises(RuntimeError, match=r"aistudio\.google\.com"):
         GeminiClient(cache=cache)
 
 

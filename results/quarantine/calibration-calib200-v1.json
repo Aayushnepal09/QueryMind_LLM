@@ -1,0 +1,37 @@
+{
+  "label": "calib200 v1 (agreement only)",
+  "n": 200,
+  "brier_score": 0.10111111111111112,
+  "expected_calibration_error": 0.08000000000000003,
+  "base_accuracy": 0.785,
+  "reliability_curve": [
+    {
+      "bin_lower": 0.0,
+      "bin_upper": 0.1,
+      "mean_predicted": 0.0,
+      "observed_accuracy": 0.0,
+      "count": 6
+    },
+    {
+      "bin_lower": 0.30000000000000004,
+      "bin_upper": 0.4,
+      "mean_predicted": 0.3333333333333333,
+      "observed_accuracy": 0.15384615384615385,
+      "count": 13
+    },
+    {
+      "bin_lower": 0.6000000000000001,
+      "bin_upper": 0.7000000000000001,
+      "mean_predicted": 0.6666666666666667,
+      "observed_accuracy": 0.5135135135135135,
+      "count": 37
+    },
+    {
+      "bin_lower": 0.9,
+      "bin_upper": 1.0,
+      "mean_predicted": 1.0,
+      "observed_accuracy": 0.9444444444444444,
+      "count": 144
+    }
+  ]
+}

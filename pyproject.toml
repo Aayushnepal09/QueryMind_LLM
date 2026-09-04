@@ -26,6 +26,9 @@ dependencies = [
     "streamlit>=1.36",
     "bcrypt>=4.1",
     "func-timeout>=4.3.5",
+    "opentelemetry-api>=1.44.0",
+    "opentelemetry-sdk>=1.44.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.44.0",
 ]
 
 [project.optional-dependencies]
@@ -46,6 +49,22 @@ packages = ["src/sqlsentinel"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",    # line length is handled by the formatter
+    "B008",    # FastAPI Depends() in defaults is idiomatic
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tracing and cache teardown deliberately swallow exceptions: observability
+# must never break the thing it observes.
+"src/sqlsentinel/tracing.py" = ["S110", "BLE001"]
+"tests/*" = ["S101"]
+# Emits Markdown prose; typographic minus, en dash and multiplication sign are
+# intentional there, not confusable-character mistakes in code.
+"scripts/build_report.py" = ["RUF001"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -38,6 +39,15 @@ PRICING: dict[str, tuple[float, float]] = {
     "gemini-2.5-flash": (0.30, 2.50),
     "gemini-2.0-flash": (0.10, 0.40),
 }
+
+MAX_RETRIES = 6
+
+
+def _retry_delay(message: str) -> float | None:
+    """Pull the server's suggested retryDelay (e.g. "retryDelay': '31s'") out of
+    a 429 payload, so we wait exactly as long as asked rather than guessing."""
+    m = re.search(r"retryDelay['\"]?\s*:\s*['\"]?(\d+(?:\.\d+)?)s", message)
+    return float(m.group(1)) + 1.0 if m else None
 
 
 @dataclass
@@ -237,6 +247,30 @@ class GeminiClient(_BaseClient):
         return self._client
 
     def _call(self, system, user, temperature, max_tokens) -> LLMResponse:
+        """Retries on 429.
+
+        The free tier's per-minute limit is reached after only a handful of
+        BIRD-sized prompts (~1,400 prompt tokens each), so an unretried eval run
+        fails most of its questions rather than merely running slowly. Honours
+        the server's retryDelay when it supplies one, otherwise backs off
+        exponentially.
+        """
+        last: Exception | None = None
+        for attempt in range(MAX_RETRIES):
+            try:
+                return self._generate(system, user, temperature, max_tokens)
+            except Exception as e:
+                last = e
+                msg = str(e)
+                if "429" not in msg and "RESOURCE_EXHAUSTED" not in msg:
+                    raise
+                if attempt == MAX_RETRIES - 1:
+                    break
+                wait = _retry_delay(msg) or min(2.0 * 2**attempt, 60.0)
+                time.sleep(wait)
+        raise RuntimeError(f"gemini rate limited after {MAX_RETRIES} attempts: {last}")
+
+    def _generate(self, system, user, temperature, max_tokens) -> LLMResponse:
         from google.genai import types
 
         r = self.client.models.generate_content(

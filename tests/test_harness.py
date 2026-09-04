@@ -27,13 +27,13 @@ def test_gold_sql_scores_100_percent(harness):
 
 def test_stub_scores_near_floor(harness):
     qids = [r["question_id"] for r in harness.records[:40]]
-    result = harness.evaluate({q: "SELECT 1" for q in qids}, qids)
+    result = harness.evaluate(dict.fromkeys(qids, "SELECT 1"), qids)
     assert result.accuracy < 15.0
 
 
 def test_unparseable_sql_scores_zero_not_crash(harness):
     qids = [r["question_id"] for r in harness.records[:60]]
-    result = harness.evaluate({q: "this is not sql at all" for q in qids}, qids)
+    result = harness.evaluate(dict.fromkeys(qids, "this is not sql at all"), qids)
     assert result.accuracy == 0.0
 
 

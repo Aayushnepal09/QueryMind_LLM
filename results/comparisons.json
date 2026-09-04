@@ -1,0 +1,60 @@
+{
+  "baseline": "baseline-dev50",
+  "comparisons": [
+    {
+      "tag": "combined-dev50",
+      "accuracy": 64.0,
+      "n": 50,
+      "delta_points": 2.0,
+      "helped": 6,
+      "hurt": 5,
+      "discordant": 11,
+      "p_value": 1.0,
+      "significant": false
+    },
+    {
+      "tag": "pruned-dev50",
+      "accuracy": 62.0,
+      "n": 50,
+      "delta_points": 0.0,
+      "helped": 0,
+      "hurt": 0,
+      "discordant": 0,
+      "p_value": 1.0,
+      "significant": false
+    },
+    {
+      "tag": "selfcorrect-dev50",
+      "accuracy": 62.0,
+      "n": 50,
+      "delta_points": 0.0,
+      "helped": 0,
+      "hurt": 0,
+      "discordant": 0,
+      "p_value": 1.0,
+      "significant": false
+    },
+    {
+      "tag": "fewshot3-dev50",
+      "accuracy": 58.0,
+      "n": 50,
+      "delta_points": -4.0,
+      "helped": 6,
+      "hurt": 8,
+      "discordant": 14,
+      "p_value": 0.79052734375,
+      "significant": false
+    },
+    {
+      "tag": "noevidence-dev50",
+      "accuracy": 42.0,
+      "n": 50,
+      "delta_points": -20.0,
+      "helped": 4,
+      "hurt": 14,
+      "discordant": 18,
+      "p_value": 0.0308837890625,
+      "significant": true
+    }
+  ]
+}

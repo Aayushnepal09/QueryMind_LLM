@@ -10,8 +10,11 @@
 
 ## Current state
 
-**Phase:** 0 — **COMPLETE** ✅ (gate met: one command produces an accuracy number)
-**Active branch:** `feat/eval-harness` (off `sqlsentinel`)
+**Phases 0–4: code COMPLETE.** Phase 5 blocked only on long-running eval sweeps.
+**Active branch:** `feat/baseline-agent` (off `sqlsentinel`)
+**Tests:** 124 passing, ruff clean.
+**Running:** `bash scripts/run_experiments.sh` — 11 sequential runs, ~14–16 h total.
+Re-running it is safe and resumes from cache; it skips any run whose traces exist.
 **Integration branch `sqlsentinel`:** created locally, **not yet pushed**
 **Hardware:** GTX 1660 Ti (6 GB VRAM), 15.8 GB RAM — relevant to the local-LLM decision below
 
@@ -62,12 +65,12 @@ Existing repo contents at `main` (commit `1e90f3c`):
 
 ## Phase checklist
 
-- [x] **Phase 0** — DONE 2026-09-03. `python -m sqlsentinel.eval --split eval_500 --predictor stub` → `EX 3.0% ± 1.5 (n=500)`.
-- [ ] **Phase 1** — `feat/llm-client`, `feat/baseline-agent`. Done when a baseline EX number exists with cost + latency.
-- [ ] **Phase 2** — few-shot retrieval, schema linking, self-correction. Done at technique → EX → Δ → cost table.
-- [ ] **Phase 3** — confidence scorer, risk router, review UI. Done at the money metric.
-- [ ] **Phase 4** — API, observability, docker-compose, CI gate.
-- [ ] **Phase 5** — results + failure taxonomy + README.
+- [x] **Phase 0** — DONE. `--predictor stub` → `EX 3.0% ± 1.5 (n=500)`.
+- [x] **Phase 1** — DONE. `llm.py` (ollama+gemini+cache), `agent.py`, `executor.py`, `schema_linker.py`, `generator.py`. Baseline `dev_50` = **62.0% ± 13.0**.
+- [x] **Phase 2 code** — DONE. `retrieval.py` (TF-IDF over calib), `Schema.prune()`, self-correction, k-sample voting. Ablation runs in progress.
+- [x] **Phase 3 code** — DONE. `confidence.py` (v1 agreement, v2 calibrated, Brier/ECE/reliability), `router.py` (risk rules + routing curve), `app/review_ui.py`. Runs in progress.
+- [x] **Phase 4** — DONE. `api.py`, `tracing.py`, Dockerfile + compose (api/review/phoenix), `.github/workflows/eval-gate.yml`, `scripts/check_regression.py`.
+- [~] **Phase 5** — README, failure taxonomy, reproduction guide and report generator written. Awaiting numbers from the sweep.
 
 ## Recorded numbers
 
@@ -75,6 +78,7 @@ Existing repo contents at `main` (commit `1e90f3c`):
 |---|---|---|---|---|---|---|
 | 2026-09-03 | stub (`SELECT 1`) | dev_50 | 50 | 4.0% | ±6.2 | 1.3 s |
 | 2026-09-03 | stub (`SELECT 1`) | eval_500 | 500 | **3.0%** | ±1.5 | 37.8 s |
+| 2026-09-03 | baseline, qwen2.5-coder:7b | dev_50 | 50 | **62.0%** | ±13.0 | 1.3 s |
 
 **The chance floor is ~3%, not 0%** — `SELECT 1` returns `{(1,)}` and some gold
 queries legitimately return a scalar 1 under set-equality scoring. Read every
@@ -93,6 +97,16 @@ accuracy against a 3% floor. See `results/baseline-floor.md`.
 *Reporting rule:* always report accuracy **with its confidence interval and n** (e.g. "58.2% ± 4.4%, n=500"). Never quote a bare number. The subset must be seeded and its question ids committed to `results/` so runs are comparable.
 
 *Deviation from CLAUDE.md:* spec §8 implies full-dev-set runs in Phases 1-2. We substitute the 500-question stratified subset. Note this in the README.
+
+## Measured facts worth not re-deriving
+
+- **Gemini free tier sustains ~0.8 req/min** once quota + backoff are counted → 10 h for 500 questions. Not viable for bulk eval. Local Qwen is the workhorse; Gemini is the `dev_50` comparison point only.
+- **Local Qwen throughput:** ~2.5–3 generations/min on BIRD-sized prompts (1,360 prompt tokens baseline, ~3,400 with 3 exemplars).
+- **Schema pruning is a near-no-op on BIRD dev:** 99% of tables retained, 1.3% prompt reduction. Databases are 3–13 tables and densely FK-connected, so join-path closure pulls back what lexical scoring drops. Negative result — report it, do not tune it away.
+- **Schema prompt sizes:** mean ~1,230 tokens, max 3,128 (european_football_2, 199 columns). Token cost is not the motivation for pruning.
+- **The official BIRD script divides by empty difficulty buckets** — any slice lacking `challenging` questions crashes it. Guarded in `harness.py`; `--subset` is stratified for the same reason.
+- **MLflow's file store is deprecated upstream** and now raises. Using `sqlite:///mlflow.db`.
+- **Docker build unverified** — Docker Desktop was not running. `docker compose config` validates and all COPY paths exist, but `docker compose up` has NOT been executed end-to-end. Do not claim it works until it has.
 
 ## Open decisions
 
