@@ -9,7 +9,10 @@ RUN pip install --no-cache-dir uv
 WORKDIR /app
 
 # Dependency layer first so source edits do not invalidate the install cache.
-COPY pyproject.toml uv.lock README.md ./
+# LICENSE is needed at build time, not just for distribution: pyproject
+# declares `license = { file = "LICENSE" }`, and hatchling fails the build
+# outright when it is absent.
+COPY pyproject.toml uv.lock README.md LICENSE ./
 RUN uv pip install --system -r pyproject.toml
 
 COPY src/ ./src/
