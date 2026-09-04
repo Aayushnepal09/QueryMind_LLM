@@ -1,0 +1,37 @@
+{
+  "label": "k3-eval200 v1 (agreement only)",
+  "n": 200,
+  "brier_score": 0.2622222222222222,
+  "expected_calibration_error": 0.20333333333333328,
+  "base_accuracy": 0.55,
+  "reliability_curve": [
+    {
+      "bin_lower": 0.0,
+      "bin_upper": 0.1,
+      "mean_predicted": 0.0,
+      "observed_accuracy": 0.07692307692307693,
+      "count": 13
+    },
+    {
+      "bin_lower": 0.30000000000000004,
+      "bin_upper": 0.4,
+      "mean_predicted": 0.3333333333333334,
+      "observed_accuracy": 0.23333333333333334,
+      "count": 30
+    },
+    {
+      "bin_lower": 0.6000000000000001,
+      "bin_upper": 0.7000000000000001,
+      "mean_predicted": 0.6666666666666664,
+      "observed_accuracy": 0.5818181818181818,
+      "count": 55
+    },
+    {
+      "bin_lower": 0.9,
+      "bin_upper": 1.0,
+      "mean_predicted": 1.0,
+      "observed_accuracy": 0.6862745098039216,
+      "count": 102
+    }
+  ]
+}
