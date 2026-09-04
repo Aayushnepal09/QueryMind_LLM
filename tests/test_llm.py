@@ -119,3 +119,82 @@ def test_ollama_live_roundtrip(cache):
     assert "select" in r.text.lower()
     assert r.output_tokens > 0
     assert r.provider == "ollama"
+
+
+# ---------------------------------------------------------------- gemini retry
+
+
+class Boom(Exception):
+    """Stands in for the SDK's 429."""
+
+
+def test_retry_delay_parsing():
+    from sqlsentinel.llm import _retry_delay
+
+    assert _retry_delay("{'retryDelay': '31s'}") == 32.0
+    assert _retry_delay('retryDelay: "7s"') == 8.0
+    assert _retry_delay("no delay here") is None
+
+
+def test_gemini_retries_on_429_then_succeeds(monkeypatch, cache):
+    """A rate limit must slow a run down, not fail it.
+
+    The free tier is reached after only a handful of BIRD-sized prompts, so an
+    unretried run loses most of its questions rather than merely taking longer.
+    """
+    import sqlsentinel.llm as llm_module
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(llm_module.time, "sleep", lambda _s: None)
+
+    client = GeminiClient(cache=cache)
+    calls = {"n": 0}
+
+    def flaky(system, user, temperature, max_tokens):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise Boom("429 RESOURCE_EXHAUSTED {'retryDelay': '1s'}")
+        return LLMResponse(text="SELECT 1", model=client.model, provider="gemini")
+
+    monkeypatch.setattr(client, "_generate", flaky)
+    assert client.complete("s", "u").text == "SELECT 1"
+    assert calls["n"] == 3
+
+
+def test_gemini_gives_up_after_the_retry_budget(monkeypatch, cache):
+    import sqlsentinel.llm as llm_module
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(llm_module.time, "sleep", lambda _s: None)
+
+    client = GeminiClient(cache=cache)
+
+    def always_limited(*_args):
+        raise Boom("429 RESOURCE_EXHAUSTED")
+
+    monkeypatch.setattr(client, "_generate", always_limited)
+    with pytest.raises(RuntimeError, match="rate limited"):
+        client.complete("s", "u")
+
+
+def test_gemini_does_not_retry_other_errors(monkeypatch, cache):
+    """Only rate limits are transient; a bad request must surface immediately."""
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    client = GeminiClient(cache=cache)
+    calls = {"n": 0}
+
+    def bad_request(*_args):
+        calls["n"] += 1
+        raise Boom("400 INVALID_ARGUMENT")
+
+    monkeypatch.setattr(client, "_generate", bad_request)
+    with pytest.raises(Boom):
+        client.complete("s", "u")
+    assert calls["n"] == 1
+
+
+def test_cache_stats_counts_entries(cache):
+    c = FakeClient(cache)
+    assert cache.stats()["entries"] == 0
+    c.complete("sys", "user")
+    assert cache.stats()["entries"] == 1

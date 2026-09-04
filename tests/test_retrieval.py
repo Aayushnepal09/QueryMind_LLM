@@ -124,3 +124,46 @@ def test_render_empty_is_empty_string():
 def test_empty_pool_rejected():
     with pytest.raises(ValueError, match="empty"):
         ExemplarStore([]).retrieve("x", k=1)
+
+
+# ---------------------------------------------------------------- from_bird
+
+
+def test_from_bird_uses_only_the_calibration_split(tmp_path):
+    """Exemplars must never be drawn from the evaluation split."""
+    import json
+
+    bird = tmp_path / "bird"
+    bird.mkdir()
+    recs = [
+        {
+            "question_id": i,
+            "db_id": "shop",
+            "question": f"question {i}",
+            "SQL": f"SELECT {i}",
+            "evidence": "",
+        }
+        for i in range(6)
+    ]
+    (bird / "dev.json").write_text(json.dumps(recs), encoding="utf-8")
+    splits = tmp_path / "splits.json"
+    splits.write_text(json.dumps({"calib": [0, 1, 2], "eval_500": [3, 4, 5]}), encoding="utf-8")
+
+    store = ExemplarStore.from_bird(bird, splits)
+    assert {r["question_id"] for r in store.records} == {0, 1, 2}
+
+
+def test_from_bird_rejects_an_empty_calibration_split(tmp_path):
+    import json
+
+    bird = tmp_path / "bird"
+    bird.mkdir()
+    (bird / "dev.json").write_text(
+        json.dumps([{"question_id": 9, "db_id": "s", "question": "q", "SQL": "SELECT 1"}]),
+        encoding="utf-8",
+    )
+    splits = tmp_path / "splits.json"
+    splits.write_text(json.dumps({"calib": []}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="calibration split is empty"):
+        ExemplarStore.from_bird(bird, splits)

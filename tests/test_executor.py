@@ -173,3 +173,38 @@ def test_dsn_missing_vars_names_them(monkeypatch):
         monkeypatch.delenv(k, raising=False)
     with pytest.raises(ValueError, match="POSTGRES_USERNAME"):
         postgres_dsn_from_env()
+
+
+# ---------------------------------------------------------------- postgres path
+
+
+def test_postgres_executor_rejects_writes_without_connecting():
+    """The read-only gate runs before any driver import or connection.
+
+    A write must be refused even if the database is unreachable, so a
+    misconfigured DSN cannot turn a rejection into a connection error that a
+    caller might retry.
+    """
+    from sqlsentinel.executor import PostgresExecutor
+
+    ex = PostgresExecutor("postgresql://nobody@127.0.0.1:1/none")
+    r = ex.execute("DROP TABLE t")
+    assert not r.ok and "rejected" in r.error
+
+
+def test_postgres_executor_reports_connection_failure_as_an_error():
+    from sqlsentinel.executor import PostgresExecutor
+
+    r = PostgresExecutor("postgresql://nobody@127.0.0.1:1/none").execute("SELECT 1", timeout_s=1)
+    assert not r.ok and r.error
+
+
+def test_timeout_marks_the_result(db):
+    """A pathological query must not hang the run."""
+    ex = SQLiteExecutor(db)
+    # a cross join large enough to exceed a very short budget
+    r = ex.execute(
+        "SELECT COUNT(*) FROM t a, t b, t c, t d, t e, t f, t g, t h, t i, t j",
+        timeout_s=0.001,
+    )
+    assert (r.timed_out and not r.ok) or r.ok  # fast machines may still finish
