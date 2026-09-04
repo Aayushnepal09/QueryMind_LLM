@@ -128,7 +128,7 @@ def feature_ablation() -> None:
         return traces, feats, labels
 
     cal_t, cal_f, cal_y = load("k3-calib200")
-    ev_t, ev_f, ev_y = load("k3-eval200")
+    _, ev_f, ev_y = load("k3-eval200")
 
     def subset(feats, keep):
         idx = [FEATURE_NAMES.index(k) for k in keep]
