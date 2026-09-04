@@ -79,8 +79,7 @@ class Schema:
                 lines.append(line)
             for local, ftable, fcol in t.foreign_keys:
                 lines.append(
-                    f"  FOREIGN KEY ({_quote(local)}) "
-                    f"REFERENCES {_quote(ftable)}({_quote(fcol)})"
+                    f"  FOREIGN KEY ({_quote(local)}) REFERENCES {_quote(ftable)}({_quote(fcol)})"
                 )
             out.append(",\n".join(lines))
             out.append(f");  -- {t.row_count:,} rows\n")
@@ -98,7 +97,6 @@ class Schema:
             for t in self.tables
             for local, ftable, fcol in t.foreign_keys
         ]
-
 
     def prune(self, question: str, evidence: str = "", min_tables: int = 2) -> Schema:
         """Drop tables the question plausibly does not need (Phase 2).
@@ -179,9 +177,7 @@ def introspect(db_path: str | Path, sample_values: int = SAMPLE_VALUES) -> Schem
         ]
         for tname in names:
             table = Table(name=tname)
-            for _, cname, ctype, _, _, pk in conn.execute(
-                f'PRAGMA table_info("{tname}")'
-            ):
+            for _, cname, ctype, _, _, pk in conn.execute(f'PRAGMA table_info("{tname}")'):
                 col = Column(name=cname, type=ctype, is_pk=bool(pk))
                 if sample_values:
                     col.samples = _samples(conn, tname, cname, sample_values)
@@ -194,9 +190,7 @@ def introspect(db_path: str | Path, sample_values: int = SAMPLE_VALUES) -> Schem
                     table.foreign_keys.append((from_col, ref_table, to_col or from_col))
 
             try:
-                table.row_count = conn.execute(
-                    f'SELECT COUNT(*) FROM "{tname}"'
-                ).fetchone()[0]
+                table.row_count = conn.execute(f'SELECT COUNT(*) FROM "{tname}"').fetchone()[0]
             except sqlite3.Error:
                 table.row_count = 0
 
@@ -211,8 +205,7 @@ def _samples(conn: sqlite3.Connection, table: str, column: str, n: int) -> list[
     dominate the prompt."""
     try:
         rows = conn.execute(
-            f'SELECT DISTINCT "{column}" FROM "{table}" '
-            f'WHERE "{column}" IS NOT NULL LIMIT {n}'
+            f'SELECT DISTINCT "{column}" FROM "{table}" WHERE "{column}" IS NOT NULL LIMIT {n}'
         ).fetchall()
     except sqlite3.Error:
         return []

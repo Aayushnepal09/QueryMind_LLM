@@ -118,7 +118,9 @@ class SQLiteExecutor:
                 # mode=ro is enforced by SQLite itself, not just by our check
                 conn = sqlite3.connect(
                     f"file:{self.db_path.as_posix()}?mode=ro",
-                    uri=True, timeout=timeout_s, check_same_thread=False,
+                    uri=True,
+                    timeout=timeout_s,
+                    check_same_thread=False,
                 )
                 conn.text_factory = lambda b: b.decode("utf-8", "replace")
                 cur = conn.execute(sql)

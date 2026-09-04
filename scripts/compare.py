@@ -29,11 +29,13 @@ TRACES = RESULTS / "traces"
 
 def labels(harness: BirdHarness, path: Path) -> dict[int, int]:
     traces = [TraceShim(d) for d in json.loads(path.read_text(encoding="utf-8"))]
-    return dict(zip(
-        [t.question_id for t in traces],
-        per_question_correct(harness, traces),
-        strict=True,
-    ))
+    return dict(
+        zip(
+            [t.question_id for t in traces],
+            per_question_correct(harness, traces),
+            strict=True,
+        )
+    )
 
 
 def main() -> None:
@@ -50,8 +52,10 @@ def main() -> None:
     base = labels(harness, base_path)
     n_base = sum(base.values())
     lo, hi = wilson_interval(n_base, len(base))
-    print(f"baseline {args.baseline}: {100 * n_base / len(base):.1f}% "
-          f"CI [{lo:.1f}, {hi:.1f}] (n={len(base)})\n")
+    print(
+        f"baseline {args.baseline}: {100 * n_base / len(base):.1f}% "
+        f"CI [{lo:.1f}, {hi:.1f}] (n={len(base)})\n"
+    )
 
     rows = []
     for path in sorted(TRACES.glob("*.json")):
@@ -68,13 +72,19 @@ def main() -> None:
 
         cmp = mcnemar(base, other, label_a=args.baseline, label_b=tag)
         acc = 100 * sum(other[i] for i in other) / len(other)
-        rows.append({
-            "tag": tag, "accuracy": acc, "n": cmp.n,
-            "delta_points": cmp.delta_points,
-            "helped": cmp.b_only, "hurt": cmp.a_only,
-            "discordant": cmp.discordant,
-            "p_value": cmp.p_value, "significant": cmp.significant,
-        })
+        rows.append(
+            {
+                "tag": tag,
+                "accuracy": acc,
+                "n": cmp.n,
+                "delta_points": cmp.delta_points,
+                "helped": cmp.b_only,
+                "hurt": cmp.a_only,
+                "discordant": cmp.discordant,
+                "p_value": cmp.p_value,
+                "significant": cmp.significant,
+            }
+        )
 
     rows.sort(key=lambda r: -r["delta_points"])
     (RESULTS / "comparisons.json").write_text(

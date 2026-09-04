@@ -106,9 +106,7 @@ def test_gemini_without_key_gives_actionable_error(monkeypatch, cache):
         GeminiClient(cache=cache)
 
 
-@pytest.mark.skipif(
-    os.getenv("SQLSENTINEL_SKIP_LIVE") == "1", reason="live model call disabled"
-)
+@pytest.mark.skipif(os.getenv("SQLSENTINEL_SKIP_LIVE") == "1", reason="live model call disabled")
 def test_ollama_live_roundtrip(cache):
     """Hits the real local model. Skipped in CI, run locally."""
     pytest.importorskip("ollama")

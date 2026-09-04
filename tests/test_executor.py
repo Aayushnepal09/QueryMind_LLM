@@ -141,8 +141,10 @@ def test_dsn_from_env(monkeypatch):
     from sqlsentinel.executor import postgres_dsn_from_env
 
     for k, v in {
-        "POSTGRES_USERNAME": "u", "POSTGRES_PASSWORD": "p",
-        "POSTGRES_SERVER": "h:5432", "POSTGRES_DATABASE": "d",
+        "POSTGRES_USERNAME": "u",
+        "POSTGRES_PASSWORD": "p",
+        "POSTGRES_SERVER": "h:5432",
+        "POSTGRES_DATABASE": "d",
     }.items():
         monkeypatch.setenv(k, v)
     assert postgres_dsn_from_env() == "postgresql://u:p@h:5432/d?sslmode=require"
@@ -153,8 +155,10 @@ def test_dsn_url_encodes_the_password(monkeypatch):
     from sqlsentinel.executor import postgres_dsn_from_env
 
     for k, v in {
-        "POSTGRES_USERNAME": "u", "POSTGRES_PASSWORD": "p@ss/w:rd",
-        "POSTGRES_SERVER": "h", "POSTGRES_DATABASE": "d",
+        "POSTGRES_USERNAME": "u",
+        "POSTGRES_PASSWORD": "p@ss/w:rd",
+        "POSTGRES_SERVER": "h",
+        "POSTGRES_DATABASE": "d",
     }.items():
         monkeypatch.setenv(k, v)
     dsn = postgres_dsn_from_env()

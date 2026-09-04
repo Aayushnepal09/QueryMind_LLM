@@ -6,14 +6,34 @@ from sqlsentinel.retrieval import ExemplarStore, render_exemplars
 @pytest.fixture
 def records():
     return [
-        {"question_id": 1, "db_id": "shop", "question": "How many orders were placed?",
-         "SQL": "SELECT COUNT(*) FROM orders", "evidence": ""},
-        {"question_id": 2, "db_id": "shop", "question": "How many customers are there?",
-         "SQL": "SELECT COUNT(*) FROM customers", "evidence": "customers table"},
-        {"question_id": 3, "db_id": "school", "question": "List the schools in Alameda county",
-         "SQL": "SELECT name FROM schools WHERE county='Alameda'", "evidence": ""},
-        {"question_id": 4, "db_id": "school", "question": "Which county has the most schools?",
-         "SQL": "SELECT county FROM schools GROUP BY county", "evidence": ""},
+        {
+            "question_id": 1,
+            "db_id": "shop",
+            "question": "How many orders were placed?",
+            "SQL": "SELECT COUNT(*) FROM orders",
+            "evidence": "",
+        },
+        {
+            "question_id": 2,
+            "db_id": "shop",
+            "question": "How many customers are there?",
+            "SQL": "SELECT COUNT(*) FROM customers",
+            "evidence": "customers table",
+        },
+        {
+            "question_id": 3,
+            "db_id": "school",
+            "question": "List the schools in Alameda county",
+            "SQL": "SELECT name FROM schools WHERE county='Alameda'",
+            "evidence": "",
+        },
+        {
+            "question_id": 4,
+            "db_id": "school",
+            "question": "Which county has the most schools?",
+            "SQL": "SELECT county FROM schools GROUP BY county",
+            "evidence": "",
+        },
     ]
 
 

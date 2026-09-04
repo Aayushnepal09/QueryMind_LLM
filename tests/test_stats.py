@@ -49,9 +49,9 @@ def test_small_difference_is_not_significant():
 
 def test_evidence_ablation_shape_is_significant():
     """The observed dev_50 result: 14 helped, 4 hurt, 32 concordant."""
-    a = dict.fromkeys(range(14), 1)          # evidence correct only
+    a = dict.fromkeys(range(14), 1)  # evidence correct only
     b = dict.fromkeys(range(14), 0)
-    for i in range(14, 18):                # no-evidence correct only
+    for i in range(14, 18):  # no-evidence correct only
         a[i], b[i] = 0, 1
     for i in range(18, 50):
         a[i], b[i] = 1, 1
@@ -69,13 +69,13 @@ def test_paired_test_resolves_what_independent_intervals_cannot():
     only at the 18 questions where the runs disagree, finds it significant.
     """
     a, b = {}, {}
-    for i in range(14):            # evidence correct only
+    for i in range(14):  # evidence correct only
         a[i], b[i] = 1, 0
-    for i in range(14, 18):        # no-evidence correct only
+    for i in range(14, 18):  # no-evidence correct only
         a[i], b[i] = 0, 1
-    for i in range(18, 35):        # both correct
+    for i in range(18, 35):  # both correct
         a[i], b[i] = 1, 1
-    for i in range(35, 50):        # both wrong
+    for i in range(35, 50):  # both wrong
         a[i], b[i] = 0, 0
 
     assert sum(a.values()) == 31 and sum(b.values()) == 21

@@ -54,23 +54,25 @@ def load_runs() -> list[dict]:
 
     runs = []
     for _, r in df.iterrows():
-        runs.append({
-            "tag": r.get("params.tag") or r.get("params.predictor"),
-            "predictor": r.get("params.predictor"),
-            "provider": r.get("params.provider"),
-            "model": r.get("params.model"),
-            "split": r.get("params.split"),
-            "n": int(float(r.get("params.n") or 0)),
-            "k": int(float(r.get("params.k") or 1)),
-            "ex": r.get("metrics.ex_accuracy"),
-            "simple": r.get("metrics.ex_simple"),
-            "moderate": r.get("metrics.ex_moderate"),
-            "challenging": r.get("metrics.ex_challenging"),
-            "cost": r.get("metrics.agent_total_cost_usd"),
-            "latency": r.get("metrics.agent_mean_latency_s"),
-            "empty": r.get("metrics.agent_empty_predictions"),
-            "start": r.get("start_time"),
-        })
+        runs.append(
+            {
+                "tag": r.get("params.tag") or r.get("params.predictor"),
+                "predictor": r.get("params.predictor"),
+                "provider": r.get("params.provider"),
+                "model": r.get("params.model"),
+                "split": r.get("params.split"),
+                "n": int(float(r.get("params.n") or 0)),
+                "k": int(float(r.get("params.k") or 1)),
+                "ex": r.get("metrics.ex_accuracy"),
+                "simple": r.get("metrics.ex_simple"),
+                "moderate": r.get("metrics.ex_moderate"),
+                "challenging": r.get("metrics.ex_challenging"),
+                "cost": r.get("metrics.agent_total_cost_usd"),
+                "latency": r.get("metrics.agent_mean_latency_s"),
+                "empty": r.get("metrics.agent_empty_predictions"),
+                "start": r.get("start_time"),
+            }
+        )
     # keep the newest run per tag
     best: dict[str, dict] = {}
     for run in sorted(runs, key=lambda r: r["start"] or 0):
@@ -117,8 +119,12 @@ def section_headline(runs: dict[str, dict]) -> str:
 
 def section_techniques(runs: dict[str, dict]) -> str:
     order = [
-        "baseline-dev50", "fewshot3-dev50", "pruned-dev50",
-        "selfcorrect-dev50", "combined-dev50", "noevidence-dev50",
+        "baseline-dev50",
+        "fewshot3-dev50",
+        "pruned-dev50",
+        "selfcorrect-dev50",
+        "combined-dev50",
+        "noevidence-dev50",
     ]
     present = [k for k in order if k in runs]
     if not present:
@@ -210,8 +216,10 @@ def section_failures() -> str:
 
 
 def section_cost(runs: dict[str, dict]) -> str:
-    lines = ["| Run | Provider | Model | n | EX | nominal cost | mean latency |",
-             "|---|---|---|---:|---:|---:|---:|"]
+    lines = [
+        "| Run | Provider | Model | n | EX | nominal cost | mean latency |",
+        "|---|---|---|---:|---:|---:|---:|",
+    ]
     any_row = False
     for tag, r in sorted(runs.items()):
         if r["ex"] is None or r["provider"] in (None, "none"):

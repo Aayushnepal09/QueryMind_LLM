@@ -49,8 +49,15 @@ class Router:
     large_result_rows: int = LARGE_RESULT_ROWS
     enforce_risk_rules: bool = True
 
-    def route(self, sql: str, confidence: float, *, row_count: int = 0,
-              executed_ok: bool = True, n_tables: int = 0) -> RoutingDecision:
+    def route(
+        self,
+        sql: str,
+        confidence: float,
+        *,
+        row_count: int = 0,
+        executed_ok: bool = True,
+        n_tables: int = 0,
+    ) -> RoutingDecision:
         reasons: list[str] = []
 
         if self.enforce_risk_rules:
@@ -97,16 +104,18 @@ def routing_curve(confidences, correct, thresholds=None) -> list[dict]:
         n_routed = int(routed.sum())
         caught = int(((correct == 0) & routed).sum())
         auto = ~routed
-        rows.append({
-            "threshold": float(t),
-            "pct_routed": 100.0 * n_routed / n,
-            "pct_errors_caught": (100.0 * caught / incorrect_total) if incorrect_total else 0.0,
-            "n_routed": n_routed,
-            "errors_caught": caught,
-            # accuracy of what is still executed without a human
-            "auto_accuracy": (100.0 * correct[auto].mean()) if auto.sum() else float("nan"),
-            "n_auto": int(auto.sum()),
-        })
+        rows.append(
+            {
+                "threshold": float(t),
+                "pct_routed": 100.0 * n_routed / n,
+                "pct_errors_caught": (100.0 * caught / incorrect_total) if incorrect_total else 0.0,
+                "n_routed": n_routed,
+                "errors_caught": caught,
+                # accuracy of what is still executed without a human
+                "auto_accuracy": (100.0 * correct[auto].mean()) if auto.sum() else float("nan"),
+                "n_auto": int(auto.sum()),
+            }
+        )
     return rows
 
 

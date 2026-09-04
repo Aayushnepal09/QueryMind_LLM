@@ -87,8 +87,14 @@ def mcnemar(
         p = min(1.0, 2 * tail / 2**n_disc)
 
     return PairedComparison(
-        n=len(ids), a_only=a_only, b_only=b_only, both=both, neither=neither,
-        p_value=p, label_a=label_a, label_b=label_b,
+        n=len(ids),
+        a_only=a_only,
+        b_only=b_only,
+        both=both,
+        neither=neither,
+        p_value=p,
+        label_a=label_a,
+        label_b=label_b,
     )
 
 

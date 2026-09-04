@@ -146,12 +146,14 @@ def query(req: QueryRequest) -> QueryResponse:
 
     with span(_state["tracer"], "query", trace_id=trace_id, db_id=req.db_id):
         agent.k = req.k
-        trace = agent.predict_one({
-            "question_id": -1,
-            "db_id": req.db_id,
-            "question": req.question,
-            "evidence": req.evidence,
-        })
+        trace = agent.predict_one(
+            {
+                "question_id": -1,
+                "db_id": req.db_id,
+                "question": req.question,
+                "evidence": req.evidence,
+            }
+        )
 
         if trace.error:
             raise HTTPException(502, f"generation failed: {trace.error}")
@@ -161,7 +163,8 @@ def query(req: QueryRequest) -> QueryResponse:
         confidence = agreement_confidence(feats)
 
         decision = router.route(
-            trace.sql, confidence,
+            trace.sql,
+            confidence,
             row_count=trace.result_row_count,
             executed_ok=trace.executed_ok,
             n_tables=len(schema.tables),
@@ -180,9 +183,13 @@ def query(req: QueryRequest) -> QueryResponse:
     if decision.decision is Decision.REVIEW:
         rid = uuid.uuid4().hex[:12]
         _review_queue[rid] = {
-            "review_id": rid, "question": req.question, "db_id": req.db_id,
-            "sql": trace.sql, "confidence": confidence,
-            "reasons": decision.reasons, "created_at": time.time(),
+            "review_id": rid,
+            "question": req.question,
+            "db_id": req.db_id,
+            "sql": trace.sql,
+            "confidence": confidence,
+            "reasons": decision.reasons,
+            "created_at": time.time(),
         }
         resp.review_id = rid
         return resp
@@ -198,9 +205,7 @@ def query(req: QueryRequest) -> QueryResponse:
 
 @app.get("/review/queue", response_model=list[ReviewItem])
 def review_queue() -> list[ReviewItem]:
-    return [ReviewItem(**v) for v in sorted(
-        _review_queue.values(), key=lambda d: d["confidence"]
-    )]
+    return [ReviewItem(**v) for v in sorted(_review_queue.values(), key=lambda d: d["confidence"])]
 
 
 @app.post("/review/{review_id}", response_model=ReviewResult)
@@ -220,6 +225,9 @@ def review(review_id: str, action: ReviewAction) -> ReviewResult:
     if not res.ok:
         raise HTTPException(400, f"query failed: {res.error}")
     return ReviewResult(
-        review_id=review_id, action=action.action, final_sql=final_sql,
-        executed=True, row_count=res.row_count,
+        review_id=review_id,
+        action=action.action,
+        final_sql=final_sql,
+        executed=True,
+        row_count=res.row_count,
     )

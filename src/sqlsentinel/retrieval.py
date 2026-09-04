@@ -44,9 +44,7 @@ class ExemplarStore:
         self.same_db_only = same_db_only
 
     @classmethod
-    def from_bird(
-        cls, bird_root: str | Path, splits_file: str | Path, **kw
-    ) -> ExemplarStore:
+    def from_bird(cls, bird_root: str | Path, splits_file: str | Path, **kw) -> ExemplarStore:
         bird_root = Path(bird_root)
         all_recs = json.loads((bird_root / "dev.json").read_text(encoding="utf-8"))
         calib = set(json.loads(Path(splits_file).read_text(encoding="utf-8"))["calib"])
@@ -57,9 +55,7 @@ class ExemplarStore:
 
     @cached_property
     def _vectorizer(self) -> TfidfVectorizer:
-        v = TfidfVectorizer(
-            ngram_range=(1, 2), sublinear_tf=True, min_df=1, stop_words="english"
-        )
+        v = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, min_df=1, stop_words="english")
         v.fit([r["question"] for r in self.records])
         return v
 
