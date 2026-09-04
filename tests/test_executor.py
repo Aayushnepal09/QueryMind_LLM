@@ -132,3 +132,40 @@ def test_different_values_do_not_normalize_equal():
 
 def test_failed_result_normalizes_empty():
     assert ExecutionResult(error="boom").normalized() == frozenset()
+
+
+# ---------------------------------------------------------------- postgres dsn
+
+
+def test_dsn_from_env(monkeypatch):
+    from sqlsentinel.executor import postgres_dsn_from_env
+
+    for k, v in {
+        "POSTGRES_USERNAME": "u", "POSTGRES_PASSWORD": "p",
+        "POSTGRES_SERVER": "h:5432", "POSTGRES_DATABASE": "d",
+    }.items():
+        monkeypatch.setenv(k, v)
+    assert postgres_dsn_from_env() == "postgresql://u:p@h:5432/d?sslmode=require"
+
+
+def test_dsn_url_encodes_the_password(monkeypatch):
+    """QueryMind's in-app copy of this did not, and broke on reserved chars."""
+    from sqlsentinel.executor import postgres_dsn_from_env
+
+    for k, v in {
+        "POSTGRES_USERNAME": "u", "POSTGRES_PASSWORD": "p@ss/w:rd",
+        "POSTGRES_SERVER": "h", "POSTGRES_DATABASE": "d",
+    }.items():
+        monkeypatch.setenv(k, v)
+    dsn = postgres_dsn_from_env()
+    assert "p%40ss%2Fw%3Ard" in dsn
+    assert "p@ss/w:rd" not in dsn
+
+
+def test_dsn_missing_vars_names_them(monkeypatch):
+    from sqlsentinel.executor import postgres_dsn_from_env
+
+    for k in ("POSTGRES_USERNAME", "POSTGRES_PASSWORD", "POSTGRES_SERVER", "POSTGRES_DATABASE"):
+        monkeypatch.delenv(k, raising=False)
+    with pytest.raises(ValueError, match="POSTGRES_USERNAME"):
+        postgres_dsn_from_env()

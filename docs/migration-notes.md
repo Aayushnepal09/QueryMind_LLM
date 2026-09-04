@@ -2,15 +2,22 @@
 
 Audit performed 2026-09-03 against `main` @ `1e90f3c`, per CLAUDE.md §1 ("audit before rewriting").
 
+> **Where the original lives.** Every file described below still exists on the
+> `main` branch, untouched. They were removed from `sqlsentinel` once their
+> reusable parts had been ported, because carrying a superseded application
+> alongside its replacement makes the repository harder to read, not easier to
+> verify. CLAUDE.md §1 asks that the "before" state be preserved as evidence —
+> `main` is that evidence. `git diff main sqlsentinel` is the whole story.
+
 ## Inventory
 
 | File | Lines | Decision | Reason |
 |---|---|---|---|
-| `streamlit_app.py` | 503 | **Split** | ~85% presentation (CSS, hero, bcrypt login). ~15% is the actual asset: the schema block, the generation prompt, the SQL extractor. |
-| `utils.py` | 24 | **Keep, relocate** | Correct Postgres DSN builder — and unlike the copy inside `streamlit_app.py`, it URL-encodes the password. Moves behind the executor's dialect boundary. |
-| `populate_db.py` | 220 | **Keep as-is** | SQLite→Postgres migration for the demo DB. Unrelated to BIRD. Repointed to `data/normalized.db`. |
+| `streamlit_app.py` | 503 | **Split, then left on `main`** | ~85% presentation (CSS, hero, bcrypt login). ~15% was the actual asset — the schema block, the generation prompt, the SQL extractor — all three ported. Superseded by `app/review_ui.py` and `src/sqlsentinel/api.py`. |
+| `utils.py` | 24 | **Ported** | Its DSN builder is now `executor.postgres_dsn_from_env()`, behind the dialect boundary, with tests covering the URL-encoding that `streamlit_app.py`'s copy got wrong. |
+| `populate_db.py` | 220 | **Left on `main`** | One-off SQLite→Postgres migration for the demo database. Unrelated to BIRD, and not part of the evaluated system. |
 | `test_render_database.py` | 27 | **Delete** | Not a test — a script with a bare top-level call that connects to prod on import. Replaced by real tests. |
-| `generate_password.py` | 8 | **Keep** | Bcrypt hash helper for the retained demo login. |
+| `generate_password.py` | 8 | **Left on `main`** | Bcrypt helper for the demo login, which `sqlsentinel` does not have (CLAUDE.md §3 lists auth as a non-goal). |
 | `normalized.db` | 15 MB | **Untracked** | Moved to `data/`, purged from history. |
 | `.idea/` | — | **Untracked** | IDE-local config. |
 | `README.md` | — | **Rewrite in Phase 5** | Stale: claims SQLite and "Gemini Pro"; code uses Postgres and `gemini-2.5-flash`. |
@@ -48,3 +55,16 @@ Consequence: the Phase 1 baseline is a **naive zero-shot prompt**, which is an h
 3. **Password not URL-encoded** in `streamlit_app.py`'s local `get_db_url`, though `utils.py` does it correctly. Silent breakage on special characters.
 4. **The "92% accuracy" claim has no test set behind it** anywhere in the repo — no fixtures, no gold queries, no harness. This is the specific problem SQLSentinel exists to fix.
 5. **SSH keypair committed** in `f90dfdc` (`aayush`, `aayush.pub`), deleted in later commits but live in history until the 2026-09-03 `git filter-repo` purge. Key should be treated as compromised and rotated.
+
+
+## What `sqlsentinel` does not carry
+
+Removed from this branch after the audit, all preserved on `main`:
+
+| Removed | Why |
+|---|---|
+| `streamlit_app.py`, `populate_db.py`, `generate_password.py` | The original demo application. Its reusable parts are ported; the rest is superseded. |
+| `utils.py` | Ported to `executor.postgres_dsn_from_env()`. |
+| `requirements.txt` | Superseded by `pyproject.toml`. Two dependency manifests that can disagree is worse than one. |
+| `.devcontainer/devcontainer.json` | Actively wrong: it installed from `requirements.txt` and auto-launched `streamlit run streamlit_app.py`. |
+| `third_party/evaluation_ex.py` | Downloaded while locating BIRD's scorer; the harness wraps `evaluation.py`. Unused code that looks authoritative is a trap. |

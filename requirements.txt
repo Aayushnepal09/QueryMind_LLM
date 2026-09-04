@@ -1,7 +1,0 @@
-streamlit
-pandas
-psycopg2-binary
-python-dotenv
-openai
-bcrypt
-google-genai

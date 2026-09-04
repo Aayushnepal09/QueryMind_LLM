@@ -194,3 +194,27 @@ class PostgresExecutor:
 def bird_executor(db_root: str | Path, db_id: str, **kw: Any) -> SQLiteExecutor:
     """Executor for one BIRD database by its db_id."""
     return SQLiteExecutor(Path(db_root) / db_id / f"{db_id}.sqlite", **kw)
+
+
+def postgres_dsn_from_env() -> str:
+    """Build a Postgres DSN from POSTGRES_* environment variables.
+
+    Ported from QueryMind's `utils.get_db_url` (see docs/migration-notes.md),
+    relocated here so the Postgres path lives behind the same dialect boundary
+    as everything else. The password is URL-encoded -- the copy of this logic
+    inside QueryMind's Streamlit app was not, and broke silently on passwords
+    containing reserved characters.
+    """
+    import os
+    from urllib.parse import quote_plus
+
+    required = ("POSTGRES_USERNAME", "POSTGRES_PASSWORD", "POSTGRES_SERVER", "POSTGRES_DATABASE")
+    values = {k: os.getenv(k) for k in required}
+    if missing := [k for k, v in values.items() if not v]:
+        raise ValueError(f"missing Postgres environment variables: {', '.join(missing)}")
+
+    return (
+        f"postgresql://{values['POSTGRES_USERNAME']}:"
+        f"{quote_plus(values['POSTGRES_PASSWORD'])}@"
+        f"{values['POSTGRES_SERVER']}/{values['POSTGRES_DATABASE']}?sslmode=require"
+    )

@@ -198,7 +198,12 @@ Full audit: [docs/migration-notes.md](docs/migration-notes.md). `main` still
 points at the original — the before state is evidence, not clutter.
 
 **Kept** (all three from `streamlit_app.py`, the only real assets in 503 lines):
-the schema-context *shape*, the generation prompt, and the SQL extractor.
+the schema-context *shape*, the generation prompt, and the SQL extractor. Its
+Postgres DSN builder became `executor.postgres_dsn_from_env()`.
+
+The original application itself is **not carried on this branch** — it lives on
+`main`, untouched, which is what makes `git diff main sqlsentinel` the complete
+before/after.
 
 **Replaced:** the hardcoded `DATABASE_SCHEMA` string became live introspection
 across 11 databases. The extractor was hardened — the original stripped
@@ -239,7 +244,9 @@ src/sqlsentinel/
 └── eval/              official BIRD harness wrapper + splits
 app/review_ui.py       Streamlit review queue
 scripts/               experiment sweep, analysis, report generation
-results/               committed metrics, figures, splits
+third_party/           BIRD's official scorer, wrapped not reimplemented
+results/               committed metrics, figures, splits, traces
+tests/                 152 tests
 ```
 
 ## Known limitations
