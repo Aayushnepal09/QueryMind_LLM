@@ -138,3 +138,56 @@ information while leaving the underlying error in place.
 **Caveat:** n=4 corrected queries. This is a mechanism observation, not a
 statistically supported claim about correction rates. The direction of the
 effect is what matters, and it is visible in the trace regardless of sample size.
+
+## Self-consistency (k=3) — the technique that worked
+
+**`k3-calib200`: EX 78.0% ± 5.7 (n=200)**, with few-shot and self-correction
+enabled. Not directly comparable to the 62% `dev_50` baseline — different
+questions — but the confidence behaviour is the point, and it is measured on 200
+questions rather than 50.
+
+### Agreement is a real signal, not a degenerate one
+
+The first thing to check with self-consistency is whether the samples actually
+diverge. With a cache keyed on `sample_index` they do:
+
+| Agreement rate | Questions | Observed accuracy |
+|---:|---:|---:|
+| 1.00 (unanimous) | 144 | 94% |
+| 0.67 | 37 | 51% |
+| 0.33 | 13 | 15% |
+| 0.00 | 6 | 0% |
+
+Monotonic across every bucket. Brier score **0.101**, down from 0.300 at k=1
+(where agreement is constant at 1.0 and the signal does not exist). ECE 0.080.
+
+### The money metric
+
+| Threshold | Routed to review | Errors caught | Auto-executed accuracy | Lift over random |
+|---:|---:|---:|---:|---:|
+| 0.35 | 10% | 40% | 85.6% | 4.2× |
+| **0.70** | **28%** | **81%** | **94.4%** | **2.9×** |
+
+**At threshold 0.70: routing 28% of queries to human review catches 81% of all
+incorrect queries, and everything auto-executed is 94.4% correct — up from 78%
+unrouted.**
+
+### Two honest caveats
+
+**v1 is consistently overconfident.** The reliability curve is monotonic but
+sits below the diagonal everywhere: predicted 0.67 → observed 0.51, predicted
+0.33 → observed 0.15. Useful for *ranking* queries by risk, but the number
+should not be read as a probability. This is precisely what the v2 calibrated
+model exists to correct.
+
+**k=3 gives only four possible confidence values** (0, 0.33, 0.67, 1.0), which
+is why the routing curve is a step function with wide flat regions. Any
+threshold in 0.35–0.65 behaves identically. Finer control needs larger k — the
+cost/granularity trade-off CLAUDE.md §13 asks about, now with a concrete answer:
+k=3 is enough to separate risk into four useful bands, and not enough to tune a
+threshold precisely.
+
+**Split note:** these numbers are from `calib`. That is legitimate for v1, which
+has no fitted parameters — it is a measurement of the raw agreement signal, not
+a trained model. The v2 calibrated scorer is fitted here and reported only on
+`eval_500`, which `calib` is disjoint from.
