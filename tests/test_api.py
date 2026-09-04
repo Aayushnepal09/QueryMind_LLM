@@ -47,6 +47,10 @@ def db_root(tmp_path):
 
 def make_client(monkeypatch, tmp_path, db_root, sql: str, threshold: float = 0.5):
     bird_schema.cache_clear()
+    # Point at a path that cannot exist, so these tests never depend on whether
+    # a fitted model happens to be sitting in results/. Tests that want the
+    # calibrated path set CONFIDENCE_MODEL themselves.
+    monkeypatch.setenv("CONFIDENCE_MODEL", str(tmp_path / "no-such-model.pkl"))
     monkeypatch.setattr(api_module, "DB_ROOT", db_root)
     cache = ResponseCache(tmp_path / "c.db")
     stub = StubClient(sql, cache)
@@ -156,12 +160,15 @@ def test_k_is_bounded(monkeypatch, tmp_path, db_root):
 
 
 def test_health_reports_which_scorer_is_active(monkeypatch, tmp_path, db_root):
+    """With no model available the service must say it is using raw agreement."""
     c = make_client(monkeypatch, tmp_path, db_root, "SELECT 1")
+    api_module._state["confidence_model"] = api_module._load_confidence_model()
     assert c.get("/health").json()["scorer"] == "agreement"
 
 
 def test_query_reports_the_scorer_it_used(monkeypatch, tmp_path, db_root):
     c = make_client(monkeypatch, tmp_path, db_root, "SELECT COUNT(*) FROM items")
+    api_module._state["confidence_model"] = api_module._load_confidence_model()
     body = c.post("/query", json={"question": "q", "db_id": "shop", "k": 1}).json()
     assert body["scorer"] == "agreement"
 
@@ -182,8 +189,9 @@ def test_calibrated_model_is_used_when_present(monkeypatch, tmp_path, db_root):
         tmp_path / "model.pkl"
     )
 
-    monkeypatch.setenv("CONFIDENCE_MODEL", str(tmp_path / "model.pkl"))
     c = make_client(monkeypatch, tmp_path, db_root, "SELECT COUNT(*) FROM items")
+    # after make_client, which pins CONFIDENCE_MODEL to a nonexistent path
+    monkeypatch.setenv("CONFIDENCE_MODEL", str(tmp_path / "model.pkl"))
     api_module._state["confidence_model"] = api_module._load_confidence_model()
 
     body = c.post("/query", json={"question": "q", "db_id": "shop", "k": 1}).json()
