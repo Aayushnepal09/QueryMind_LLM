@@ -133,3 +133,23 @@ differently:
 `(provider, model, system, user, temperature, sample_index)` in `.llm_cache/`,
 so re-running an unchanged configuration is free and instant. Delete that
 directory only if you intend to pay the wall-clock cost again.
+
+## Windows note: Git Bash mangles container paths
+
+Running an ad-hoc `docker run -v /app/data ...` from Git Bash silently rewrites
+absolute container paths — `/app/data` becomes `C:/Program Files/Git/app/data`
+— and the mount lands nowhere. The API still starts and reports healthy, but
+with `"databases": 0`.
+
+`docker compose up` is unaffected, because Compose reads the paths from YAML
+rather than through the shell. If you do need a bare `docker run` on Windows,
+disable the conversion:
+
+```bash
+MSYS_NO_PATHCONV=1 docker run -v "//c/path/to/repo/data:/app/data:ro" ...
+```
+
+Verified working configuration (2026-09-04): image builds clean, container
+serves `/health` with all 11 databases visible, and `POST /query` returns
+correct SQL executed against the mounted benchmark, reaching Ollama on the host
+GPU via `host.docker.internal`.
