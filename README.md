@@ -241,8 +241,14 @@ over 14 features: agreement rate, tables referenced, aggregation/subquery/nestin
 flags, pre-correction execution error, correction rounds, result size, empty
 result, question length, evidence presence, schema coverage, SQL length, joins.
 
-Reported with a **reliability diagram, Brier score and ECE**, because a
-well-calibrated 0.6 is more useful than an overconfident 0.9.
+Measured effect: **Brier 0.262 → 0.194, ECE 0.203 → 0.051.** A well-calibrated
+0.6 is more useful than an overconfident 0.9, and this is the layer that makes
+the difference.
+
+The training set is the `calib` split, disjoint from `eval_500` by construction,
+and `ConfidenceModel.fit()` raises if they ever overlap. The service loads the
+fitted model at startup and reports which scorer produced each number, so a
+caller can tell a calibrated probability from a raw agreement ratio.
 
 **Risk overrides are not probabilistic.** Independent of confidence, these force
 review: any non-`SELECT` statement, a failed execution, an oversized result set,
@@ -256,20 +262,28 @@ the model felt sure about it.
   <img src="results/routing-k3-eval200.png" alt="Routing curve" width="52%">
 </p>
 
-**Left — reliability.** Observed accuracy rises monotonically with predicted
-confidence across all four buckets (0.08 / 0.23 / 0.58 / 0.69), so the score
-ranks risk correctly. It sits below the diagonal throughout, meaning the raw
-agreement rate is systematically *overconfident* — which is what the v2
-calibration layer exists to correct. Marker area is bin population.
+**Left — reliability.** After calibration the curve sits on the diagonal:
+predicted 0.26 → observed 0.25, 0.37 → 0.36, 0.76 → 0.71, 0.86 → 0.80. A score
+of 0.7 means roughly a 70% chance of being right. Marker area is bin population.
+
+| Scorer | Brier ↓ | ECE ↓ |
+|---|---:|---:|
+| v1 — raw agreement rate | 0.262 | 0.203 |
+| **v2 — calibrated, 14 features** | **0.194** | **0.051** |
+
+**Expected calibration error falls 4×.** v1 ranked risk correctly but overstated
+confidence everywhere; v2 is what makes the number readable as a probability.
+Fitted on `calib`, reported on the disjoint `eval_500`.
 
 **Right — routing.** Every point above the dashed line beats routing at random.
-At the marked operating point, **sending 22% of queries to review catches 39% of
-all incorrect answers**, and what still auto-executes is 65.0% correct rather
-than 54.5%.
+**Sending 27% of queries to review catches 47% of all incorrect answers**, and
+what still auto-executes is 67.1% correct rather than 54.5%.
 
-The curve is a step function because k=3 admits only four possible confidence
-values — a concrete answer to "what is the right k?": three separates risk into
-four useful bands, and is not enough to tune a threshold finely.
+The threshold is a reported tunable, not a constant — review 10% of traffic and
+catch 22% of errors, or review 54% and catch 73%. Calibration is also what makes
+that choice possible: the raw agreement rate at k=3 takes only four values and
+gave three usable operating points, while the calibrated score gives 17 from the
+same samples.
 
 ---
 
