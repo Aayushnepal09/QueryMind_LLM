@@ -141,8 +141,20 @@ effect is what matters, and it is visible in the trace regardless of sample size
 
 ## Self-consistency (k=3) — the technique that worked
 
-**`k3-calib200`: EX 78.0% ± 5.7 (n=200)**, with few-shot and self-correction
-enabled. Not directly comparable to the 62% `dev_50` baseline — different
+> ⚠️ **SUPERSEDED — the numbers in this section came from a contaminated run.**
+> `k3-calib200` was evaluated on the same split the few-shot exemplars are drawn
+> from, so every question retrieved itself and its gold SQL. Worth 23.5 points.
+> See `results/quarantine/README.md`. The run has been repeated with the leakage
+> guard in place; this section is retained to show what the contaminated numbers
+> looked like, and is replaced below once the clean run lands.
+>
+> The *structure* of the finding — that agreement rate is monotonic and that
+> routing catches errors at a useful rate — is expected to survive, because the
+> agreement signal does not depend on the leak. The *magnitudes* are not to be
+> cited.
+
+**`k3-calib200`: EX 78.0% ± 5.7 (n=200)** — **contaminated**, with few-shot and
+self-correction enabled. Not directly comparable to the 62% `dev_50` baseline — different
 questions — but the confidence behaviour is the point, and it is measured on 200
 questions rather than 50.
 
