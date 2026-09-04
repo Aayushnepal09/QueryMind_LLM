@@ -78,7 +78,13 @@ class BirdHarness:
 
         for p in (self.dev_json, self.gold_sql, self.db_root):
             if not p.exists():
-                raise FileNotFoundError(f"BIRD dev set incomplete: {p} not found")
+                raise FileNotFoundError(
+                    f"BIRD dev set incomplete: {p} not found.\n"
+                    f"The benchmark is ~1.4 GB and is not in the repository. "
+                    f"Download it from https://bird-bench.github.io/ and unpack it "
+                    f"to {self.bird_root}, or point BIRD_DEV_ROOT at an existing "
+                    f"copy.\nStep-by-step instructions: docs/reproducing.md"
+                )
 
         self.records = json.loads(self.dev_json.read_text(encoding="utf-8"))
         self.by_id = {r["question_id"]: r for r in self.records}

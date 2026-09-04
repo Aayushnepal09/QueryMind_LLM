@@ -153,3 +153,27 @@ Verified working configuration (2026-09-04): image builds clean, container
 serves `/health` with all 11 databases visible, and `POST /query` returns
 correct SQL executed against the mounted benchmark, reaching Ollama on the host
 GPU via `host.docker.internal`.
+
+## Fresh-clone verification (2026-09-04)
+
+Cloned to an empty directory and installed from scratch:
+
+| Check | Result |
+|---|---|
+| `uv sync --extra dev` | clean install |
+| `uv run pytest` | **184 passed, 12 skipped** — the skips are the tests that need the BIRD databases, which self-skip when absent |
+| `uv run ruff check` / `ruff format --check` | clean |
+| `uv run sqlsentinel-eval --help` | works |
+| Running the eval without BIRD present | fails with an actionable message pointing here |
+| Secrets or benchmark data in the clone | none — `.env` and `data/` are absent as intended |
+
+**Windows path-length caveat.** The first attempt failed with
+`ModuleNotFoundError: No module named 'sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode'`
+— not a dependency problem. The clone sat under a deeply nested temp directory,
+which pushed scikit-learn's compiled extension paths to 263 characters, past
+Windows' 260-character `MAX_PATH`. The `.pyd` files were present and simply
+could not be loaded. Clone to a short path, or enable long paths:
+
+```
+Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' LongPathsEnabled 1
+```
