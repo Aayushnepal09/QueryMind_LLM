@@ -381,3 +381,68 @@ Finishing it needs either a paid key or one 50-question run per day across two
 days. Neither was in scope for a zero-budget project, and inventing a figure
 from 23 questions would contradict the reporting rules this project sets for
 itself.
+
+---
+
+# Does QueryMind's prompt engineering do anything?
+
+CLAUDE.md §13: *"Does QueryMind's existing prompting beat a naive baseline on
+BIRD? Worth knowing and reporting either way."*
+
+The ported prompt carries eight numbered requirements, explicit join-path
+guidance, dialect reminders and formatting rules — 2,025 characters. The control
+strips all of it: schema, question, *"Write a SQLite query that answers the
+question."* — 1,130 characters, with a bare `"You are a helpful assistant."`
+system message.
+
+## Result
+
+| Prompt | EX (n=500) | 95% CI |
+|---|---:|---:|
+| Ported QueryMind prompt | 45.6% | ±4.3 |
+| **Naive control** | **49.4%** | ±4.4 |
+
+Paired on the same 500 questions: the naive prompt is **+3.8 points ahead**,
+helping 59 questions and hurting 40. **p = 0.070.**
+
+## What can and cannot be claimed
+
+**Not claimable:** that the naive prompt is better. p = 0.070 does not clear
+0.05, and this project does not get to relax its own threshold because a result
+is interesting.
+
+**Claimable, and the point:** the tuned prompt shows **no benefit whatsoever**,
+and what evidence exists points the other way. The eight numbered requirements,
+the join guidance, the dialect reminders — the most visible engineering effort
+in the original project — buy nothing measurable, and are more likely to be
+costing accuracy than adding it.
+
+That is a real answer to §13, and the more useful one. It says the improvement
+in this project came from self-consistency and routing, not from prompt
+craftsmanship, and it says so with a number instead of an impression.
+
+## The subset flipped the sign
+
+The same ablation on `dev_50` gave the **opposite direction**:
+
+| Split | n | tuned | naive | direction |
+|---|---:|---:|---:|---|
+| `dev_50` | 50 | 62.0% | 58.0% | tuned ahead by 4.0 |
+| **`eval_500`** | **500** | **45.6%** | **49.4%** | **naive ahead by 3.8** |
+
+`dev_50` is a subset of `eval_500`, so this is the same agent on the same
+benchmark. At n=50 the effect not only failed to reach significance, it pointed
+the wrong way by almost exactly the same margin.
+
+This is the second time small-sample noise produced a confidently wrong picture
+here — the first being the 17-point accuracy overestimate recorded above. Had
+this ablation been run only on the development loop, the write-up would have
+concluded that QueryMind's prompt engineering helps. **The number would have
+been wrong in direction, not just magnitude.**
+
+## Caveat
+
+One model (`qwen2.5-coder:7b`), one benchmark. Instruction-heavy prompts may
+help larger models, or models less trained on SQL. What is measured is that on
+BIRD dev with a 7B code model, this particular tuned prompt does not earn its
+tokens.

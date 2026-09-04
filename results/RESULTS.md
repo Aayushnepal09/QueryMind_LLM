@@ -92,6 +92,8 @@ Routing curves: `results/routing-*.png`
 | `k3-calib200` | ollama | `qwen2.5-coder:7b` | 200 | 78.0% | $0.0000 | 32.0s |
 | `k3-calib200-clean` | ollama | `qwen2.5-coder:7b` | 200 | 53.5% | $0.0000 | 49.5s |
 | `k3-eval200` | ollama | `qwen2.5-coder:7b` | 200 | 54.5% | $0.0000 | 30.5s |
+| `naive-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 58.0% | $0.0000 | 16.6s |
+| `naive-eval500` | ollama | `qwen2.5-coder:7b` | 500 | 49.4% | $0.0000 | 16.5s |
 | `noevidence-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 42.0% | $0.0000 | 9.6s |
 | `pruned-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 18.3s |
 | `selfcorrect-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 0.0s |
