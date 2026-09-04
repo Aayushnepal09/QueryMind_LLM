@@ -3,12 +3,18 @@
     uv run streamlit run app/review_ui.py --server.headless true --server.port 8610
     uv run python scripts/record_demo.py
 
-Walks the plain-English review flow a non-engineer would follow — queue, then
-one flagged query, its confidence in words, the answer it would return, what
-the query does, and the decision — then switches to the engineer view to show
-the same item as SQL.
+Shows the app being *used*, not just displayed: filtering the queue, opening a
+query, typing a note, recording a decision and watching the counters move, then
+switching to the engineer view and editing the SQL.
 
-Written as a script rather than done by hand so the demo can be re-recorded
+State changes are the point. A reviewer watching this should see the queue
+respond — the pending count drop, an item leave the list — because that is what
+distinguishes a working tool from a screenshot.
+
+The decisions database is reset before recording so the demo always starts from
+an empty queue and the counters move visibly.
+
+Written as a script rather than captured by hand so the demo can be re-recorded
 after a UI change instead of going stale.
 """
 
@@ -30,9 +36,27 @@ RESULTS = REPO_ROOT / "results"
 # Two speeds. Scroll steps are short so movement reads as motion rather than as
 # jumps; the frames a viewer needs to actually read are held long enough to
 # read. An earlier cut used 3-5s uniformly, which was both slow and jerky.
-GLIDE = 200  # intermediate scroll frames
-READ = 1250  # frames carrying information
-BEAT = 650  # transitions
+GLIDE = 170  # intermediate scroll and typing frames
+READ = 1050  # frames carrying information
+BEAT = 550  # transitions
+
+
+def _reset_decisions() -> None:
+    """Clear recorded review decisions so the demo starts from a full queue.
+
+    Without this the counters do not move on a re-record, because the item the
+    walkthrough decides on was already decided last time.
+    """
+    db = REPO_ROOT / "results" / "review_decisions.db"
+    if not db.exists():
+        return
+    # Delete the rows rather than the file: the running Streamlit process holds
+    # an open handle, and on Windows that makes unlink fail outright.
+    import sqlite3
+
+    with sqlite3.connect(db) as conn:
+        conn.execute("DELETE FROM decisions")
+        conn.commit()
 
 
 def record(url: str, out: Path, width: int = 1180, height: int = 840) -> None:
@@ -58,44 +82,90 @@ def record(url: str, out: Path, width: int = 1180, height: int = 840) -> None:
                 page.wait_for_timeout(260)
                 shot(page, GLIDE)
 
-        # the queue
+        # --- the queue, 99 pending
         shot(page, READ)
 
-        # open a flagged query
-        target = page.get_by_text("How strong is the Hulk?", exact=False).first
-        target.scroll_into_view_if_needed()
+        # --- filter the queue with the confidence slider.
+        # Driven by keyboard rather than by dragging: Streamlit renders the
+        # slider as input[type=range], and arrow keys move it deterministically
+        # while a drag depends on pixel geometry that shifts with the layout.
+        slider = page.get_by_label("Show confidence at or below")
+        slider.click()
+        page.wait_for_timeout(400)
+        for _ in range(6):  # 1.00 -> 0.70, the routing threshold
+            slider.press("ArrowLeft")
+            page.wait_for_timeout(220)
+            shot(page, GLIDE)
+        page.wait_for_timeout(1800)
+        shot(page, READ + 500)  # the list narrows to the riskiest items
+
+        for _ in range(6):  # back to the full queue
+            slider.press("ArrowRight")
+            page.wait_for_timeout(120)
+        page.wait_for_timeout(1600)
+
+        # --- open a flagged query.
+        # Streamlit renders every row's controls into the DOM whether the
+        # expander is open or not, so selectors must be scoped to the row --
+        # a bare .first picks a different item's button.
+        QUESTION = "How strong is the Hulk?"
+        row = page.locator('div[data-testid="stExpander"]').filter(has_text=QUESTION).first
+        row.scroll_into_view_if_needed()
         page.wait_for_timeout(400)
         shot(page, BEAT)
-        target.click()
-        page.wait_for_timeout(2200)
+        row.get_by_text(QUESTION, exact=False).first.click()
+        page.wait_for_timeout(2400)
         shot(page, BEAT)
 
-        # confidence in words
+        # --- confidence in words
         glide(320)
         shot(page, READ)
 
-        # the answer it would return
+        # --- the answer it would return
         glide(300)
         shot(page, READ + 400)
 
-        # what the query does
+        # --- what the query does
         glide(300)
         shot(page, READ)
 
-        # the decision controls
-        glide(320)
+        # --- type a reviewer note, in chunks so it reads as typing
+        glide(300)
+        note = row.get_by_role("textbox").first
+        note.scroll_into_view_if_needed()
+        note.click()
+        for chunk in ("Strength 100 looks ", "right, but this ", "misses durability"):
+            note.press_sequentially(chunk, delay=22)
+            shot(page, GLIDE + 140)
         shot(page, READ)
 
-        # engineer mode: scroll back to the item, then just far enough to frame
-        # the SQL editor rather than past it to the buttons
-        page.get_by_text("Engineer (SQL)", exact=False).first.click()
-        page.wait_for_timeout(2600)
-        page.get_by_text("How strong is the Hulk?", exact=False).first.scroll_into_view_if_needed()
-        page.wait_for_timeout(600)
+        # --- record the decision, then scroll up to watch the counters move.
+        # Target the button, not the <p> inside it: the text node has no box of
+        # its own, so Playwright reports it as not visible and the click hangs.
+        reject = row.get_by_role("button", name="This looks wrong").first
+        reject.scroll_into_view_if_needed()
+        page.wait_for_timeout(500)
         shot(page, BEAT)
-        page.mouse.wheel(0, 260)
-        page.wait_for_timeout(900)
-        shot(page, READ + 600)
+        reject.click()
+        page.wait_for_timeout(2800)
+        page.mouse.wheel(0, -2000)
+        page.wait_for_timeout(1200)
+        shot(page, READ + 800)  # reviewed 0 -> 1, pending 99 -> 98
+
+        # --- engineer mode: same queue, SQL first, editable
+        page.get_by_role("radio", name="Engineer (SQL)").first.click()
+        page.wait_for_timeout(2800)
+        shot(page, BEAT)
+
+        NEXT = "What percentage of Japanese"
+        nxt = page.locator('div[data-testid="stExpander"]').filter(has_text=NEXT).first
+        nxt.scroll_into_view_if_needed()
+        page.wait_for_timeout(500)
+        nxt.get_by_text(NEXT, exact=False).first.click()
+        page.wait_for_timeout(2600)
+        shot(page, BEAT)
+        glide(340)
+        shot(page, READ + 700)
 
         browser.close()
 
@@ -130,9 +200,13 @@ def main() -> None:
     args = ap.parse_args()
 
     try:
+        _reset_decisions()
         record(args.url, Path(args.out))
     except Exception as e:
-        print(f"recording failed: {type(e).__name__}: {e}")
+        # Page text can contain emoji; a cp1252 console cannot encode them and
+        # the traceback print would itself raise, hiding the real failure.
+        detail = str(e).encode("ascii", "replace").decode("ascii")
+        print(f"recording failed: {type(e).__name__}: {detail[:400]}")
         print(f"is the review UI running at {args.url}?")
         sys.exit(1)
 

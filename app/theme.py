@@ -25,7 +25,11 @@ MUTED = "#94a3b8"
 CSS = """
 <style>
   /* ---------- layout ---------- */
-  .block-container { max-width: 1180px; padding-top: 2.2rem; padding-bottom: 4rem; }
+  /* No sidebar: the four controls live inline, so the page reads top to bottom
+     and the mode switch is visible without opening a drawer. */
+  .block-container { max-width: 900px; padding-top: 2.4rem; padding-bottom: 4rem; }
+  section[data-testid="stSidebar"] { display: none; }
+  div[data-testid="collapsedControl"] { display: none; }
 
   /* ---------- header ---------- */
   .sentinel-head {

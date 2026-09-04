@@ -44,8 +44,8 @@ DB_ROOT = REPO_ROOT / "data" / "bird" / "dev_20240627" / "dev_databases"
 st.set_page_config(
     page_title="SQLSentinel Review",
     page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
 
@@ -88,13 +88,35 @@ def load_queue() -> list[dict]:
     return json.loads(QUEUE_FILE.read_text(encoding="utf-8"))
 
 
+def _unique_columns(columns: list[str]) -> list[str]:
+    """Disambiguate repeated column names.
+
+    A join that selects same-named columns from two tables returns duplicates --
+    `SELECT T1.element, T2.element FROM ...` yields two columns called
+    `element`. Arrow rejects that, so st.dataframe raises ValueError and the
+    whole page dies on an otherwise valid query. Suffix the repeats instead.
+    """
+    seen: dict[str, int] = {}
+    out: list[str] = []
+    for name in columns:
+        label = name or "column"
+        if label in seen:
+            seen[label] += 1
+            out.append(f"{label} ({seen[label]})")
+        else:
+            seen[label] = 1
+            out.append(label)
+    return out
+
+
 @st.cache_data(show_spinner=False)
 def run_preview(db_id: str, sql: str):
     """Execute read-only for the preview. Cached so switching items is instant."""
     res = bird_executor(DB_ROOT, db_id).execute(sql)
     if not res.ok:
         return None, res.error
-    return pd.DataFrame(res.rows, columns=res.columns or None), None
+    cols = _unique_columns(res.columns) if res.columns else None
+    return pd.DataFrame(res.rows, columns=cols), None
 
 
 # ---------------------------------------------------------------- views
@@ -185,33 +207,44 @@ def main() -> None:
         progress=pct,
     )
 
-    with st.sidebar:
-        st.header("View")
-        mode = st.radio(
-            "Who is reviewing?",
-            ["Anyone (plain English)", "Engineer (SQL)"],
-            help=(
-                "Both modes act on the same queue and log decisions identically. "
-                "Plain English leads with the answer; Engineer leads with the SQL."
-            ),
+    # Controls sit inline rather than in a sidebar. There are only four of them,
+    # and a drawer that has to be opened to discover the mode switch hides the
+    # single most important thing about this queue -- that two different
+    # audiences can work it.
+    st.markdown('<div class="label">Reviewing as</div>', unsafe_allow_html=True)
+    mode = st.segmented_control(
+        "Reviewing as",
+        ["Anyone (plain English)", "Engineer (SQL)"],
+        default="Anyone (plain English)",
+        label_visibility="collapsed",
+    )
+    expert = bool(mode) and mode.startswith("Engineer")
+
+    f1, f2, f3 = st.columns([3, 2, 2], vertical_alignment="bottom")
+    with f1:
+        max_conf = st.slider("Show confidence at or below", 0.0, 1.0, 1.0, 0.05)
+    with f2:
+        show_done = st.checkbox("Include reviewed", value=False)
+    with f3:
+        df = pd.read_sql_query("SELECT * FROM decisions", conn)
+        st.download_button(
+            "Export decisions",
+            df.to_csv(index=False),
+            "review_decisions.csv",
+            "text/csv",
+            use_container_width=True,
+            disabled=df.empty,
         )
-        expert = mode.startswith("Engineer")
-        st.divider()
-        st.header("Filters")
-        show_done = st.checkbox("Show already reviewed", value=False)
-        max_conf = st.slider("Only show confidence at or below", 0.0, 1.0, 1.0, 0.05)
-        st.divider()
-        st.caption(
+
+    with st.expander("How does a query get here?"):
+        st.markdown(
             "A query reaches this queue when the system's confidence falls below "
             "the routing threshold, or when a safety rule fires regardless of "
-            "confidence (for example: it is not a read-only query, or it returns "
-            "an unusually large amount of data)."
+            "confidence — it is not a read-only query, or it returns an unusually "
+            "large amount of data."
         )
-        if st.button("Export decisions (CSV)", use_container_width=True):
-            df = pd.read_sql_query("SELECT * FROM decisions", conn)
-            st.download_button(
-                "Download", df.to_csv(index=False), "review_decisions.csv", "text/csv"
-            )
+
+    st.divider()
 
     items = [i for i in (queue if show_done else pending) if i.get("confidence", 0) <= max_conf]
     if not items:
