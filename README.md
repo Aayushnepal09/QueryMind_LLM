@@ -77,6 +77,24 @@ point. Details, and seven more findings, in
 
 ---
 
+## What the evaluation found
+
+Beyond the headline delta, eight secondary analyses
+([results/FINDINGS.md](results/FINDINGS.md)):
+
+| Finding | Measured |
+|---|---|
+| Most errors are **silent** — they run and return plausible rows | 59% of baseline errors; 71% after self-correction |
+| Per-database accuracy spread | **65 points** (22.6% → 88.1%), non-overlapping CIs |
+| Schema size predicts difficulty | **No** — no correlation significant; table count trends positive |
+| The +4.8 point gain churned | fixed 61, broke 36, **net negative on challenging questions** |
+| Question length predicts failure | r = −0.224, **p < 0.0001**; 61% → 14% across buckets |
+| BIRD's evidence field is worth | +20 points overall, **2.5× more on moderate than simple** |
+| Agreement tracks BIRD's difficulty labels | **No** — the signals are complementary, not redundant |
+| Zero-row string-filter failures are case problems | **No** — only 8% recoverable by relaxing the match |
+
+---
+
 ## Why this exists
 
 QueryMind's README claimed *"92% accuracy on complex multi-table schemas."* That
@@ -278,44 +296,6 @@ subsequent deltas measure real technique rather than re-tuning.
 
 ---
 
-## Project layout
-
-```
-src/sqlsentinel/
-├── llm.py             provider abstraction + response cache
-├── schema_linker.py   introspection, DDL rendering, pruning
-├── generator.py       prompt + SQL extraction
-├── executor.py        read-only SQLite/Postgres, timeout, normalization
-├── retrieval.py       TF-IDF exemplar retrieval (calib split only)
-├── agent.py           orchestration, self-correction, k-sample voting
-├── confidence.py      features, calibrated model, Brier/ECE
-├── router.py          risk rules, threshold, routing curve
-├── tracing.py         OpenTelemetry (no-ops when unconfigured)
-├── api.py             FastAPI service
-└── eval/              official BIRD harness wrapper + splits
-app/review_ui.py       Streamlit review queue
-scripts/               experiment sweep, analysis, report generation
-third_party/           BIRD's official scorer, wrapped not reimplemented
-results/               committed metrics, figures, splits, traces
-tests/                 152 tests
-```
-
-## What the evaluation found
-
-Beyond the headline delta, eight secondary analyses
-([results/FINDINGS.md](results/FINDINGS.md)):
-
-| Finding | Measured |
-|---|---|
-| Most errors are **silent** — they run and return plausible rows | 59% of baseline errors; 71% after self-correction |
-| Per-database accuracy spread | **65 points** (22.6% → 88.1%), non-overlapping CIs |
-| Schema size predicts difficulty | **No** — no correlation significant; table count trends positive |
-| The +4.8 point gain churned | fixed 61, broke 36, **net negative on challenging questions** |
-| Question length predicts failure | r = −0.224, **p < 0.0001**; 61% → 14% across buckets |
-| BIRD's evidence field is worth | +20 points overall, **2.5× more on moderate than simple** |
-| Agreement tracks BIRD's difficulty labels | **No** — the signals are complementary, not redundant |
-| Zero-row string-filter failures are case problems | **No** — only 8% recoverable by relaxing the match |
-
 ## Known limitations
 
 - **`dev_50` is underpowered, and this was measured rather than assumed.** Run
@@ -342,6 +322,30 @@ Beyond the headline delta, eight secondary analyses
   (3 tables) scores 23%. Pruning attacks the wrong variable.
 - **Not a leaderboard entry.** Top BIRD systems are large ensembles built over
   months. This is a single-model agent with an honest evaluation around it.
+
+---
+
+## Project layout
+
+```
+src/sqlsentinel/
+├── llm.py             provider abstraction + response cache
+├── schema_linker.py   introspection, DDL rendering, pruning
+├── generator.py       prompt + SQL extraction
+├── executor.py        read-only SQLite/Postgres, timeout, normalization
+├── retrieval.py       TF-IDF exemplar retrieval (calib split only)
+├── agent.py           orchestration, self-correction, k-sample voting
+├── confidence.py      features, calibrated model, Brier/ECE
+├── router.py          risk rules, threshold, routing curve
+├── tracing.py         OpenTelemetry (no-ops when unconfigured)
+├── api.py             FastAPI service
+└── eval/              official BIRD harness wrapper + splits
+app/review_ui.py       Streamlit review queue
+scripts/               experiment sweep, analysis, report generation
+third_party/           BIRD's official scorer, wrapped not reimplemented
+results/               committed metrics, figures, splits, traces
+tests/                 152 tests
+```
 
 ## Documentation
 
