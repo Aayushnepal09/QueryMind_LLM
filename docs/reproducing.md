@@ -177,3 +177,13 @@ could not be loaded. Clone to a short path, or enable long paths:
 ```
 Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' LongPathsEnabled 1
 ```
+
+## Re-recording the demo
+
+```bash
+uv run streamlit run app/review_ui.py --server.headless true --server.port 8610
+uv run python scripts/record_demo.py
+```
+
+Writes `results/review-ui-demo.gif`. Scripted rather than hand-captured so it
+can be regenerated after a UI change instead of going stale.

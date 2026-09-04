@@ -50,6 +50,8 @@ dev = [
     "ruff>=0.5",
     "matplotlib>=3.9",   # calibration plots
     "pre-commit>=3.7",
+    "pillow>=12.3.0",
+    "playwright>=1.62.0",
 ]
 mcp = [
     "fastmcp>=4.0.2",
