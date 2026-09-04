@@ -30,7 +30,7 @@ Self-correction cut loud execution errors almost in half (82 → 44) while the
 silent share of errors *rose* from 59% to 71%. The technique converts failures
 that announce themselves into failures that do not.
 
-That is a genuine safety regression hiding inside a 4.8-point accuracy
+That is a genuine safety regression hiding inside a 5-point accuracy
 improvement, and it is invisible in any single-number report. It is also the
 clearest argument for this project's central claim: **an accuracy number tells
 you how often a text-to-SQL system is wrong; it does not tell you whether you
@@ -116,7 +116,7 @@ contrast is the supportable part.
 
 ---
 
-## 4. A +4.8 point improvement moved 97 questions
+## 4. A +5 point improvement moved 97 questions
 
 Comparing baseline to final on the same 500 questions:
 
@@ -124,7 +124,7 @@ Comparing baseline to final on the same 500 questions:
 |---|---:|
 | Questions fixed | **61** |
 | Questions broken | **36** |
-| Net | **+25** (+4.8 points, p = 0.014) |
+| Net | **+25** (+5.0 points, p = 0.014) |
 | **Churn** | **3.9× the net effect** |
 
 Nearly four questions change answer for every one net gain. By difficulty:

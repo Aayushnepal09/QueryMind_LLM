@@ -16,7 +16,7 @@ list.
 >
 > - Rebuilt a text-to-SQL tool whose accuracy claim was unverifiable into a
 >   benchmarked system, measuring it on the public BIRD-SQL dev set with the
->   official execution-accuracy harness: **45.6% → 50.4% (n=500, p=0.014)**
+>   official execution-accuracy harness: **45.6% → 50.4% (n=500, +5.0 paired, p=0.014)**
 >   single-shot to final, and **55.0%** with k=3 self-consistency
 >   (**+9.0 points, p=0.008**), all comparisons paired via exact McNemar rather
 >   than overlapping confidence intervals.
@@ -50,7 +50,7 @@ list.
 - Quantified a class of failure that accuracy alone conceals: **59% of incorrect
   queries execute successfully and return non-empty results**, and self-correction
   *raised* that share to 71% while halving visible errors — a safety regression
-  hidden inside a 4.8-point accuracy gain — then built confidence-based routing
+  hidden inside a 5-point accuracy gain — then built confidence-based routing
   and a non-expert review interface as the response.
 
 ### Analysis depth
@@ -121,7 +121,7 @@ traces.
 |---|---|---|
 | Baseline accuracy | 45.6% ± 4.3 (n=500) | `results/RESULTS.md` |
 | Final accuracy | 50.4% ± 4.4 (n=500) | `results/RESULTS.md` |
-| Final delta | +4.8 points, p = 0.014 | `results/comparisons.json` |
+| Final delta (paired) | +5.0 points, 61 fixed / 36 broken, p = 0.014 | `results/comparisons.json` |
 | k=3 self-consistency | 55.0% (n=200), +9.0 points, p = 0.008 | `results/comparisons.json` |
 | Chance floor | 3.0% | `results/baseline-floor.md` |
 | Routing | 22% routed, 39% of errors caught | `results/routing-k3-eval200.json` |
@@ -133,7 +133,7 @@ traces.
 | Question length | r = −0.224, p < 0.0001 | `results/findings.json` |
 | Evidence field | +20 points, p = 0.031 | `results/comparisons.json` |
 | Benchmark | BIRD dev `dev_20240627`, 1,534 questions, 11 databases | `docs/reproducing.md` |
-| Tests | 196 passing | `uv run pytest` |
+| Tests | 264 passing, 92% coverage | `uv run pytest --cov=sqlsentinel` |
 
 **Do not round these upward.** The credibility of the whole project rests on the
 numbers being exactly what was measured, and anyone who asks can run

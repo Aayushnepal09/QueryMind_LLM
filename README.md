@@ -75,7 +75,7 @@ Three things about how numbers are reported here:
 **59% of the baseline's wrong answers execute cleanly and return non-empty
 results** — they are indistinguishable from correct answers without the gold
 query. Self-correction *raises* that share to 71% while halving loud execution
-errors: a safety regression concealed inside a 4.8-point accuracy improvement.
+errors: a safety regression concealed inside a 5-point accuracy improvement.
 
 That gap between "the number went up" and "the system got safer" is the entire
 argument for building the confidence layer rather than chasing another accuracy
@@ -94,7 +94,7 @@ Beyond the headline delta, eight secondary analyses
 | Most errors are **silent** — they run and return plausible rows | 59% of baseline errors; 71% after self-correction |
 | Per-database accuracy spread | **65 points** (22.6% → 88.1%), non-overlapping CIs |
 | Schema size predicts difficulty | **No** — no correlation significant; table count trends positive |
-| The +4.8 point gain churned | fixed 61, broke 36, **net negative on challenging questions** |
+| The +5 point gain churned | fixed 61, broke 36, **net negative on challenging questions** |
 | Question length predicts failure | r = −0.224, **p < 0.0001**; 61% → 14% across buckets |
 | BIRD's evidence field is worth | +20 points overall, **2.5× more on moderate than simple** |
 | Agreement tracks BIRD's difficulty labels | **No** — the signals are complementary, not redundant |
