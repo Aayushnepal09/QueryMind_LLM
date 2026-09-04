@@ -75,7 +75,7 @@ Three things about how numbers are reported here:
    ([why](results/baseline-floor.md)).
 3. **Negative results are kept.** Techniques that did not help have rows in the
    table with their real numbers, and a leakage bug that inflated an early
-   result by 23.5 points is documented in
+   result by 24.5 points is documented in
    [results/quarantine/](results/quarantine/README.md) rather than deleted.
 
 ### The finding that matters most

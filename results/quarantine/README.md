@@ -22,11 +22,25 @@ Two runs with an identical configuration (`--k 3 --few-shot 3
 
 | Run | Split | EX |
 |---|---|---:|
-| `k3-calib200` | `calib` (in the exemplar pool) | **78.0% ± 5.7** |
+| `k3-calib200` (contaminated) | `calib` (in the exemplar pool) | **78.0% ± 5.7** |
 | `k3-eval200` | `eval_500` (not in the pool) | **54.5% ± 6.8** |
 
 A 23.5-point gap between two similarly-stratified samples of the same benchmark
 is not a difficulty difference. That discrepancy is what prompted the check.
+
+### Confirmed after the fix
+
+Re-running the identical configuration with the leakage guard in place:
+
+| Run | Split | EX |
+|---|---|---:|
+| `k3-calib200` (clean) | `calib` | **53.5% ± 6.8** |
+| `k3-eval200` | `eval_500` | 54.5% ± 6.8 |
+
+**The contamination was worth 24.5 points** (78.0% -> 53.5%), slightly more than
+the 23.5 estimated from the cross-split gap. The two splits now agree within
+their confidence intervals, which is the actual evidence the leak is closed --
+not merely that the guard executes.
 
 ## Scope of the contamination
 

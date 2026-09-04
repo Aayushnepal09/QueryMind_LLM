@@ -21,14 +21,14 @@ list.
 >   (**+9.0 points, p=0.008**), all comparisons paired via exact McNemar rather
 >   than overlapping confidence intervals.
 > - Built a calibrated confidence scorer (self-consistency agreement plus 14
->   query features, isotonic-calibrated logistic regression) that **routes 22%
->   of queries to human review while catching 39% of all incorrect answers**,
->   raising auto-executed accuracy from **54.5% to 65.0%** — motivated by the
+>   query features, isotonic-calibrated logistic regression) that **routes 27%
+>   of queries to human review while catching 47% of all incorrect answers**,
+>   raising auto-executed accuracy from **54.5% to 67.1%** — motivated by the
 >   finding that **59% of the agent's wrong answers execute cleanly and return
 >   plausible data**, and are therefore invisible without it.
 > - Instrumented the system end to end — OpenTelemetry tracing, per-query cost
 >   and latency, MLflow experiment tracking, a Dockerised FastAPI service, and a
->   CI accuracy-regression gate — and found a retrieval leakage bug worth **23.5
+>   CI accuracy-regression gate — and found a retrieval leakage bug worth **24.5
 >   points** of inflated accuracy by cross-checking two splits, documenting it
 >   rather than deleting the result.
 
@@ -88,7 +88,7 @@ A leakage bug I found by noticing that two runs of the identical configuration
 scored 78% and 54.5% on differently-drawn samples of the same benchmark.
 Few-shot exemplars were retrieved from the same split being evaluated, so every
 question retrieved *itself* at similarity 1.0 and its gold SQL went into the
-prompt. Worth 23.5 points. The project already had a leakage guard — on the
+prompt. Worth 24.5 points, confirmed by re-running clean: 78.0% -> 53.5%. The project already had a leakage guard — on the
 *confidence model* — and it did not cover the *generator*. Two paths through the
 same split, one guard. The fix, regression tests, and a written postmortem are
 in `results/quarantine/`.
@@ -124,10 +124,11 @@ traces.
 | Final delta (paired) | +5.0 points, 61 fixed / 36 broken, p = 0.014 | `results/comparisons.json` |
 | k=3 self-consistency | 55.0% (n=200), +9.0 points, p = 0.008 | `results/comparisons.json` |
 | Chance floor | 3.0% | `results/baseline-floor.md` |
-| Routing | 22% routed, 39% of errors caught | `results/routing-k3-eval200.json` |
-| Auto-executed accuracy | 54.5% → 65.0% | `results/routing-k3-eval200.json` |
+| Routing | 27% routed, 47% of errors caught | `results/routing-k3-eval200.json` |
+| Auto-executed accuracy | 54.5% → 67.1% | `results/routing-k3-eval200.json` |
+| Calibration | Brier 0.262 → 0.194, ECE 0.203 → 0.051 | `results/calibration-k3-eval200-v2.json` |
 | Silent failure rate | 59% of errors (71% after self-correction) | `results/findings.json` |
-| Leakage bug | 23.5 points | `results/quarantine/README.md` |
+| Leakage bug | 24.5 points (78.0% → 53.5% on re-run) | `results/quarantine/README.md` |
 | dev_50 overestimate | 17 points, CI excluded truth | `results/technique-notes.md` |
 | Per-database spread | 22.6% – 88.1% | `results/findings.json` |
 | Question length | r = −0.224, p < 0.0001 | `results/findings.json` |
