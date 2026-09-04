@@ -1,6 +1,17 @@
 {
-  "baseline": "baseline-dev50",
+  "baseline": "baseline-eval500",
   "comparisons": [
+    {
+      "tag": "k3-eval200",
+      "accuracy": 55.0,
+      "n": 200,
+      "delta_points": 9.0,
+      "helped": 30,
+      "hurt": 12,
+      "discordant": 42,
+      "p_value": 0.007915897334896727,
+      "significant": true
+    },
     {
       "tag": "combined-dev50",
       "accuracy": 64.0,
@@ -9,6 +20,17 @@
       "helped": 6,
       "hurt": 5,
       "discordant": 11,
+      "p_value": 1.0,
+      "significant": false
+    },
+    {
+      "tag": "baseline-dev50",
+      "accuracy": 62.0,
+      "n": 50,
+      "delta_points": 0.0,
+      "helped": 0,
+      "hurt": 0,
+      "discordant": 0,
       "p_value": 1.0,
       "significant": false
     },
