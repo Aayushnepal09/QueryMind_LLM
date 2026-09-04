@@ -141,6 +141,18 @@ docker compose up
 
 API on `:8000`, review UI on `:8501`, trace viewer on `:6006`.
 
+Or expose it to an MCP-speaking assistant:
+
+```bash
+uv run --extra mcp python -m sqlsentinel.mcp_server
+```
+
+Four tools — `list_databases`, `describe_database`, `ask`, `run_sql`. Every
+`ask` response carries a `trust` field (`high` / `low` / `unusable`) rather than
+returning an answer as bare fact, because 59% of this agent's wrong answers
+execute cleanly and look plausible. `run_sql` rejects any non-read statement
+before it reaches the database.
+
 ---
 
 ## Running it for free
@@ -339,6 +351,7 @@ src/sqlsentinel/
 ├── router.py          risk rules, threshold, routing curve
 ├── tracing.py         OpenTelemetry (no-ops when unconfigured)
 ├── api.py             FastAPI service
+├── mcp_server.py      MCP tools for assistant integration
 └── eval/              official BIRD harness wrapper + splits
 app/review_ui.py       Streamlit review queue
 scripts/               experiment sweep, analysis, report generation
