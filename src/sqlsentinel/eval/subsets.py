@@ -30,9 +30,7 @@ EVAL_N = 500
 DEV_N = 50
 
 
-def _stratified_sample(
-    records: list[dict], n: int, rng: random.Random
-) -> list[int]:
+def _stratified_sample(records: list[dict], n: int, rng: random.Random) -> list[int]:
     """Sample n question_ids, preserving the difficulty x db_id distribution.
 
     Uses largest-remainder allocation so the strata proportions are matched as

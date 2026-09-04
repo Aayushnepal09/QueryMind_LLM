@@ -203,3 +203,67 @@ threshold precisely.
 has no fitted parameters — it is a measurement of the raw agreement signal, not
 a trained model. The v2 calibrated scorer is fitted here and reported only on
 `eval_500`, which `calib` is disjoint from.
+
+---
+
+# Final numbers (clean, post-leakage-fix)
+
+## The headline
+
+| Configuration | Split | n | EX | 95% CI |
+|---|---|---:|---:|---:|
+| Stub (`SELECT 1`) — chance floor | eval_500 | 500 | 3.0% | ±1.5 |
+| **Baseline** (ported QueryMind prompt, single-shot) | eval_500 | 500 | **45.6%** | ±4.3 |
+| **Final** (k=3 self-consistency + few-shot + self-correction) | eval_500 subset | 200 | **55.0%** | ±6.8 |
+
+**Paired comparison on the 200 shared questions: +9.0 points, 30 helped, 12
+hurt, McNemar exact p = 0.0079 — significant.**
+
+This is the project's real improvement, and it comes almost entirely from
+self-consistency. The individual techniques measured alone on `dev_50` were all
+null; sampling k=3 and voting on executed results is what moved the number.
+
+## The small-sample lesson, measured
+
+The 50-question development loop and the 500-question evaluation split were run
+with the identical configuration. `dev_50` is a stratified subset of `eval_500`,
+so this is the same agent on the same benchmark:
+
+| Slice | n | EX | 95% CI |
+|---|---:|---:|---:|
+| `dev_50` | 50 | 62.0% | [48.2, 74.1] |
+| the other 450 | 450 | 43.1% | [38.6, 47.7] |
+| **full `eval_500`** | **500** | **45.0%** | **[40.7, 49.4]** |
+
+**The development loop overestimated accuracy by 17 points, and its 95%
+confidence interval did not contain the true value.** Stratification by
+difficulty × database did not save it: at n=50 there are only ~4 questions per
+database, and that is not enough.
+
+Had this project reported `dev_50` numbers — which is the natural thing to do,
+because it is the loop you iterate against — it would have claimed 62% for a
+system that scores 45.6%. That is the same class of error as QueryMind's
+unverifiable "92%", arrived at honestly.
+
+It is also why every technique delta in this repository is reported with its
+confidence interval and a paired significance test, and why the reported split
+is fixed and committed before any technique is tried.
+
+## Failure taxonomy (baseline, n=500, 273 failures)
+
+| Category | Count | Share |
+|---|---:|---:|
+| `execution_error` | 82 | 30% |
+| `join_path_error` | 73 | 27% |
+| `other` | 60 | 22% |
+| `wrong_columns` | 27 | 10% |
+| `aggregation_error` | 16 | 6% |
+| `value_matching` | 9 | 3% |
+| `ordering_or_limit` | 5 | 2% |
+| `empty_result` | 1 | 0% |
+
+Nearly a third of baseline failures never execute at all — which looks like a
+strong argument for self-correction, until you read the self-correction result
+above: it repairs executability without repairing correctness, converting loud
+failures into silent ones. The two findings only make sense together, and
+together they are the argument for routing rather than for repair.

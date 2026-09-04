@@ -94,7 +94,9 @@ class Agent:
             prefix = ""
             if self.few_shot:
                 ex = self.exemplars.retrieve(
-                    q["question"], k=self.few_shot, db_id=q["db_id"],
+                    q["question"],
+                    k=self.few_shot,
+                    db_id=q["db_id"],
                     # never retrieve the question being answered
                     exclude_question_id=q["question_id"],
                 )
@@ -145,8 +147,10 @@ class Agent:
         different queries that return the same rows are the same answer, and
         that is exactly the equivalence BIRD scores on.
         """
-        results = [(c.sql, ex_runner.execute(c.sql) if c.sql else ExecutionResult(error="empty"))
-                   for c in cands]
+        results = [
+            (c.sql, ex_runner.execute(c.sql) if c.sql else ExecutionResult(error="empty"))
+            for c in cands
+        ]
         buckets = Counter(r.normalized() for _, r in results if r.ok)
         if not buckets:
             return results[0][0], 0.0, results[0][1]

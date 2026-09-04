@@ -109,8 +109,13 @@ class ConfidenceModel:
         self.feature_names = list(FEATURE_NAMES)
         self.trained_on: list[int] = []
 
-    def fit(self, features: list[QueryFeatures], correct: list[int],
-            question_ids: list[int], forbidden_ids: set[int] | None = None) -> ConfidenceModel:
+    def fit(
+        self,
+        features: list[QueryFeatures],
+        correct: list[int],
+        question_ids: list[int],
+        forbidden_ids: set[int] | None = None,
+    ) -> ConfidenceModel:
         """Fit on calibration data.
 
         `forbidden_ids` is the evaluation split. Passing any of it raises --
@@ -158,8 +163,14 @@ class ConfidenceModel:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as fh:
-            pickle.dump({"model": self.model, "features": self.feature_names,
-                         "trained_on": self.trained_on}, fh)
+            pickle.dump(
+                {
+                    "model": self.model,
+                    "features": self.feature_names,
+                    "trained_on": self.trained_on,
+                },
+                fh,
+            )
 
     @classmethod
     def load(cls, path: str | Path) -> ConfidenceModel:
@@ -169,7 +180,9 @@ class ConfidenceModel:
             blob = pickle.load(fh)
         m = cls()
         m.model, m.feature_names, m.trained_on = (
-            blob["model"], blob["features"], blob.get("trained_on", [])
+            blob["model"],
+            blob["features"],
+            blob.get("trained_on", []),
         )
         return m
 
@@ -196,12 +209,15 @@ def reliability_curve(probs, correct, n_bins: int = 10):
     for lo, hi in itertools.pairwise(edges):
         m = (probs >= lo) & (probs < hi if hi < 1 else probs <= hi)
         if m.sum():
-            out.append({
-                "bin_lower": float(lo), "bin_upper": float(hi),
-                "mean_predicted": float(probs[m].mean()),
-                "observed_accuracy": float(correct[m].mean()),
-                "count": int(m.sum()),
-            })
+            out.append(
+                {
+                    "bin_lower": float(lo),
+                    "bin_upper": float(hi),
+                    "mean_predicted": float(probs[m].mean()),
+                    "observed_accuracy": float(correct[m].mean()),
+                    "count": int(m.sum()),
+                }
+            )
     return out
 
 
@@ -209,9 +225,9 @@ def expected_calibration_error(probs, correct, n_bins: int = 10) -> float:
     """Weighted mean gap between predicted and observed accuracy."""
     curve = reliability_curve(probs, correct, n_bins)
     n = len(probs) or 1
-    return float(sum(
-        b["count"] / n * abs(b["mean_predicted"] - b["observed_accuracy"]) for b in curve
-    ))
+    return float(
+        sum(b["count"] / n * abs(b["mean_predicted"] - b["observed_accuracy"]) for b in curve)
+    )
 
 
 def save_calibration_report(path, probs, correct, label: str) -> dict:

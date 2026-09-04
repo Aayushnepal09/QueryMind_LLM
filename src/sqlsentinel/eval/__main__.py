@@ -50,29 +50,44 @@ def load_split(name: str, bird_root: Path) -> list[int]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="sqlsentinel.eval")
-    ap.add_argument("--split", default="dev_50",
-                    choices=["dev_50", "eval_500", "calib", "full"],
-                    help="which committed split to evaluate (default: dev_50)")
-    ap.add_argument("--subset", type=int, default=None,
-                    help="stratified subsample of N questions from the split")
+    ap.add_argument(
+        "--split",
+        default="dev_50",
+        choices=["dev_50", "eval_500", "calib", "full"],
+        help="which committed split to evaluate (default: dev_50)",
+    )
+    ap.add_argument(
+        "--subset",
+        type=int,
+        default=None,
+        help="stratified subsample of N questions from the split",
+    )
     ap.add_argument("--predictor", default="stub", choices=sorted(PREDICTORS))
-    ap.add_argument("--provider", default=None, choices=["ollama", "gemini"],
-                    help="LLM provider (default: SQLSENTINEL_PROVIDER)")
-    ap.add_argument("--workers", type=int, default=1,
-                    help="concurrent generations; keep at 1 for ollama")
-    ap.add_argument("--no-evidence", action="store_true",
-                    help="ablate BIRD's evidence field")
-    ap.add_argument("--few-shot", type=int, default=0,
-                    help="retrieve N exemplars from the calib split")
-    ap.add_argument("--prune-schema", action="store_true",
-                    help="drop tables the question likely does not need")
-    ap.add_argument("--max-corrections", type=int, default=0,
-                    help="self-correction rounds on execution error (cap 2)")
-    ap.add_argument("--k", type=int, default=1,
-                    help="candidates per question for self-consistency")
+    ap.add_argument(
+        "--provider",
+        default=None,
+        choices=["ollama", "gemini"],
+        help="LLM provider (default: SQLSENTINEL_PROVIDER)",
+    )
+    ap.add_argument(
+        "--workers", type=int, default=1, help="concurrent generations; keep at 1 for ollama"
+    )
+    ap.add_argument("--no-evidence", action="store_true", help="ablate BIRD's evidence field")
+    ap.add_argument(
+        "--few-shot", type=int, default=0, help="retrieve N exemplars from the calib split"
+    )
+    ap.add_argument(
+        "--prune-schema", action="store_true", help="drop tables the question likely does not need"
+    )
+    ap.add_argument(
+        "--max-corrections",
+        type=int,
+        default=0,
+        help="self-correction rounds on execution error (cap 2)",
+    )
+    ap.add_argument("--k", type=int, default=1, help="candidates per question for self-consistency")
     ap.add_argument("--tag", default="", help="label for this run in MLflow")
-    ap.add_argument("--dump-traces", default="",
-                    help="write per-question traces to this JSON path")
+    ap.add_argument("--dump-traces", default="", help="write per-question traces to this JSON path")
     ap.add_argument("--bird-root", default=os.getenv("BIRD_DEV_ROOT", "data/bird/dev_20240627"))
     ap.add_argument("--num-cpus", type=int, default=4)
     ap.add_argument("--no-mlflow", action="store_true")
@@ -135,30 +150,34 @@ def main() -> None:
         mlflow.set_tracking_uri(f"sqlite:///{(REPO_ROOT / 'mlflow.db').as_posix()}")
         mlflow.set_experiment("sqlsentinel")
         with mlflow.start_run(run_name=f"{args.predictor}-{args.split}-n{len(qids)}"):
-            mlflow.log_params({
-                "predictor": args.predictor,
-                "tag": args.tag or args.predictor,
-                "few_shot": args.few_shot,
-                "prune_schema": args.prune_schema,
-                "max_corrections": args.max_corrections,
-                "k": args.k,
-                "provider": getattr(agent.client, "provider", "none") if agent else "none",
-                "model": getattr(agent.client, "model", "none") if agent else "none",
-                "use_evidence": bool(agent.use_evidence) if agent else False,
-                "split": args.split,
-                "n": len(qids),
-                "bird_version": bird_root.name,
-            })
-            mlflow.log_metrics({
-                "ex_accuracy": result.accuracy,
-                "ex_ci95": result.ci95,
-                "ex_simple": result.simple,
-                "ex_moderate": result.moderate,
-                "ex_challenging": result.challenging,
-                "generation_seconds": gen_s,
-                "scoring_seconds": eval_s,
-                **({f"agent_{k}": v for k, v in agent.summary().items()} if agent else {}),
-            })
+            mlflow.log_params(
+                {
+                    "predictor": args.predictor,
+                    "tag": args.tag or args.predictor,
+                    "few_shot": args.few_shot,
+                    "prune_schema": args.prune_schema,
+                    "max_corrections": args.max_corrections,
+                    "k": args.k,
+                    "provider": getattr(agent.client, "provider", "none") if agent else "none",
+                    "model": getattr(agent.client, "model", "none") if agent else "none",
+                    "use_evidence": bool(agent.use_evidence) if agent else False,
+                    "split": args.split,
+                    "n": len(qids),
+                    "bird_version": bird_root.name,
+                }
+            )
+            mlflow.log_metrics(
+                {
+                    "ex_accuracy": result.accuracy,
+                    "ex_ci95": result.ci95,
+                    "ex_simple": result.simple,
+                    "ex_moderate": result.moderate,
+                    "ex_challenging": result.challenging,
+                    "generation_seconds": gen_s,
+                    "scoring_seconds": eval_s,
+                    **({f"agent_{k}": v for k, v in agent.summary().items()} if agent else {}),
+                }
+            )
         print("logged to MLflow")
 
     if args.dump_traces and agent is not None:

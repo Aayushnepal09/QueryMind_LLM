@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [sqlsentinel, main]
+  pull_request:
+    branches: [sqlsentinel, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: tests and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --extra dev
+
+      - name: Lint
+        run: uv run ruff check src tests scripts
+
+      - name: Format check
+        run: uv run ruff format --check src tests scripts
+
+      # The BIRD databases are 1.4 GB and gitignored, so tests that need them
+      # skip themselves here. Everything that does not -- extraction, caching,
+      # confidence, routing, statistics, the API -- runs on every push.
+      - name: Tests
+        run: uv run pytest -q --cov=sqlsentinel --cov-report=term-missing
+
+  regression-gate:
+    name: eval regression gate
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --extra dev
+
+      - name: Look for the benchmark cache
+        id: bird
+        uses: actions/cache/restore@v4
+        with:
+          path: data/bird
+          key: bird-dev-20240627
+
+      # The gate needs two things it cannot provide itself: the benchmark
+      # databases and an API key. When either is absent the job reports that it
+      # could not measure anything and stops -- it does not pass silently
+      # (which would make the gate decorative) and it does not fail (which would
+      # leave a permanent red badge on a repository that is working fine).
+      - name: Report when the gate cannot run
+        if: steps.bird.outputs.cache-hit != 'true' || env.GEMINI_API_KEY == ''
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          {
+            echo "### Regression gate skipped"
+            echo
+            echo "The accuracy gate needs the BIRD dev set and an LLM key, neither of"
+            echo "which is available in this environment."
+            echo
+            echo "| Requirement | Present |"
+            echo "|---|---|"
+            echo "| \`bird-dev-20240627\` cache | ${{ steps.bird.outputs.cache-hit == 'true' && 'yes' || 'no' }} |"
+            echo "| \`GEMINI_API_KEY\` secret | ${{ secrets.GEMINI_API_KEY != '' && 'yes' || 'no' }} |"
+            echo
+            echo "See \`docs/reproducing.md\` to populate the cache. Until then the"
+            echo "gate is inactive and accuracy is not being enforced."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Score the 50-question subset
+        if: steps.bird.outputs.cache-hit == 'true' && env.GEMINI_API_KEY != ''
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SQLSENTINEL_PROVIDER: gemini
+        run: |
+          uv run python -m sqlsentinel.eval \
+            --split dev_50 --predictor agent --provider gemini \
+            --workers 1 --tag ci --no-mlflow | tee eval.txt
+
+      - name: Fail on an accuracy regression
+        if: steps.bird.outputs.cache-hit == 'true' && env.GEMINI_API_KEY != ''
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: uv run python scripts/check_regression.py eval.txt

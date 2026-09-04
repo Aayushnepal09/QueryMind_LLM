@@ -133,16 +133,25 @@ class BirdHarness:
             prefix = f"{work.as_posix()}/"
             proc = subprocess.run(
                 [
-                    sys.executable, str(OFFICIAL_SCRIPT),
-                    "--predicted_sql_path", prefix,
-                    "--ground_truth_path", prefix,
-                    "--db_root_path", f"{self.db_root.as_posix()}/",
-                    "--data_mode", "dev",
-                    "--diff_json_path", str(work / "dev_diff.json"),
-                    "--num_cpus", str(num_cpus),
-                    "--meta_time_out", str(timeout),
+                    sys.executable,
+                    str(OFFICIAL_SCRIPT),
+                    "--predicted_sql_path",
+                    prefix,
+                    "--ground_truth_path",
+                    prefix,
+                    "--db_root_path",
+                    f"{self.db_root.as_posix()}/",
+                    "--data_mode",
+                    "dev",
+                    "--diff_json_path",
+                    str(work / "dev_diff.json"),
+                    "--num_cpus",
+                    str(num_cpus),
+                    "--meta_time_out",
+                    str(timeout),
                 ],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
 
         if proc.returncode != 0:

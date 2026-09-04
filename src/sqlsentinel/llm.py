@@ -105,9 +105,7 @@ class ResponseCache:
         return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
     def get(self, key: str) -> LLMResponse | None:
-        row = self._conn().execute(
-            "SELECT payload FROM responses WHERE key = ?", (key,)
-        ).fetchone()
+        row = self._conn().execute("SELECT payload FROM responses WHERE key = ?", (key,)).fetchone()
         if row is None:
             return None
         return LLMResponse(**json.loads(row[0]), cached=True)
@@ -163,9 +161,7 @@ class _BaseClient:
         sample_index: int = 0,
         max_tokens: int = 512,
     ) -> LLMResponse:
-        key = ResponseCache.key(
-            self.provider, self.model, system, user, temperature, sample_index
-        )
+        key = ResponseCache.key(self.provider, self.model, system, user, temperature, sample_index)
         hit = self.cache.get(key)
         if hit is not None:
             return hit
@@ -176,9 +172,7 @@ class _BaseClient:
         self.cache.put(key, resp)
         return resp
 
-    def _call(
-        self, system: str, user: str, temperature: float, max_tokens: int
-    ) -> LLMResponse:
+    def _call(self, system: str, user: str, temperature: float, max_tokens: int) -> LLMResponse:
         raise NotImplementedError
 
 
@@ -292,9 +286,7 @@ class GeminiClient(_BaseClient):
         )
 
 
-def get_client(
-    provider: str | None = None, cache: ResponseCache | None = None
-) -> LLMClient:
+def get_client(provider: str | None = None, cache: ResponseCache | None = None) -> LLMClient:
     """Build a client from SQLSENTINEL_PROVIDER, or an explicit override."""
     name = (provider or os.getenv("SQLSENTINEL_PROVIDER", "ollama")).lower()
     if name == "ollama":

@@ -58,9 +58,7 @@ def test_row_counts(db):
 
 def test_sample_values_present_and_capped(db):
     s = introspect(db, sample_values=2)
-    city = next(
-        c for t in s.tables if t.name == "customers" for c in t.columns if c.name == "city"
-    )
+    city = next(c for t in s.tables if t.name == "customers" for c in t.columns if c.name == "city")
     assert 0 < len(city.samples) <= 2
 
 

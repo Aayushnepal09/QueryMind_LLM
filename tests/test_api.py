@@ -115,7 +115,9 @@ def test_review_queue_lists_pending(monkeypatch, tmp_path, db_root):
 def test_review_approve_after_edit(monkeypatch, tmp_path, db_root):
     c = make_client(monkeypatch, tmp_path, db_root, "SELECT nope FROM missing")
     rid = c.post("/query", json={"question": "q", "db_id": "shop", "k": 1}).json()["review_id"]
-    r = c.post(f"/review/{rid}", json={"action": "edit", "edited_sql": "SELECT COUNT(*) FROM items"})
+    r = c.post(
+        f"/review/{rid}", json={"action": "edit", "edited_sql": "SELECT COUNT(*) FROM items"}
+    )
     assert r.status_code == 200
     assert r.json()["row_count"] == 1
     # consumed

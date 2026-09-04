@@ -37,6 +37,10 @@ from sqlsentinel.router import best_operating_point, routing_curve
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS = REPO_ROOT / "results"
 
+# The official BIRD scorer uses a 30s per-query timeout; per-question labelling
+# must use the same budget or it diverges from the headline number.
+OFFICIAL_TIMEOUT_S = 30.0
+
 
 class TraceShim:
     """Rehydrate a dumped AgentTrace dict into attribute access."""
@@ -142,38 +146,46 @@ def main() -> None:
     feats = []
     for t in traces:
         rec = harness.by_id[t.question_id]
-        feats.append(extract_features(
-            t, rec["question"], rec.get("evidence", ""), t.n_tables_in_prompt or 1
-        ))
+        feats.append(
+            extract_features(t, rec["question"], rec.get("evidence", ""), t.n_tables_in_prompt or 1)
+        )
 
     # ---- confidence
     conf_v1 = np.array([agreement_confidence(f) for f in feats])
     reports = {}
     reports["v1_agreement"] = save_calibration_report(
-        RESULTS / f"calibration-{args.label}-v1.json", conf_v1, correct,
+        RESULTS / f"calibration-{args.label}-v1.json",
+        conf_v1,
+        correct,
         f"{args.label} v1 (agreement only)",
     )
 
     conf = conf_v1
     if args.calib_traces and Path(args.calib_traces).exists():
-        cal = [TraceShim(d) for d in json.loads(
-            Path(args.calib_traces).read_text(encoding="utf-8"))]
+        cal = [
+            TraceShim(d) for d in json.loads(Path(args.calib_traces).read_text(encoding="utf-8"))
+        ]
         cal_correct = per_question_correct(harness, cal)
         cal_feats = []
         for t in cal:
             rec = harness.by_id[t.question_id]
-            cal_feats.append(extract_features(
-                t, rec["question"], rec.get("evidence", ""), t.n_tables_in_prompt or 1
-            ))
+            cal_feats.append(
+                extract_features(
+                    t, rec["question"], rec.get("evidence", ""), t.n_tables_in_prompt or 1
+                )
+            )
         model = ConfidenceModel().fit(
-            cal_feats, cal_correct,
+            cal_feats,
+            cal_correct,
             question_ids=[t.question_id for t in cal],
             forbidden_ids=set(splits["eval_500"]),
         )
         model.save(RESULTS / f"confidence-model-{args.label}.pkl")
         conf = model.predict(feats)
         reports["v2_calibrated"] = save_calibration_report(
-            RESULTS / f"calibration-{args.label}-v2.json", conf, correct,
+            RESULTS / f"calibration-{args.label}-v2.json",
+            conf,
+            correct,
             f"{args.label} v2 (calibrated, {len(cal)} calibration questions)",
         )
 
@@ -191,26 +203,32 @@ def main() -> None:
             continue
         gold = harness.gold_lines[t.question_id].split("\t")[0]
         rec = harness.by_id[t.question_id]
-        failures.append({
-            "question_id": t.question_id,
-            "db_id": t.db_id,
-            "difficulty": rec["difficulty"],
-            "category": classify_failure(t, gold),
-            "question": rec["question"],
-            "predicted_sql": t.sql,
-            "gold_sql": gold,
-        })
+        failures.append(
+            {
+                "question_id": t.question_id,
+                "db_id": t.db_id,
+                "difficulty": rec["difficulty"],
+                "category": classify_failure(t, gold),
+                "question": rec["question"],
+                "predicted_sql": t.sql,
+                "gold_sql": gold,
+            }
+        )
     counts: dict[str, int] = {}
     for f in failures:
         counts[f["category"]] = counts.get(f["category"], 0) + 1
     (RESULTS / f"failures-{args.label}.json").write_text(
-        json.dumps({
-            "n_failures": len(failures),
-            "n_total": len(traces),
-            "distribution": dict(sorted(counts.items(), key=lambda kv: -kv[1])),
-            "definitions": TAXONOMY,
-            "failures": failures,
-        }, indent=2), encoding="utf-8",
+        json.dumps(
+            {
+                "n_failures": len(failures),
+                "n_total": len(traces),
+                "distribution": dict(sorted(counts.items(), key=lambda kv: -kv[1])),
+                "definitions": TAXONOMY,
+                "failures": failures,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
     )
 
     _plots(args.label, conf, correct, curve)
@@ -227,18 +245,24 @@ def per_question_correct(harness: BirdHarness, traces) -> list[int]:
     """
     from sqlsentinel.executor import bird_executor
 
+    # Match the official scorer's execution parameters, not the agent's.
+    # The agent runs with a 5s timeout and a 5,000-row cap because it is
+    # serving queries; the scorer fetches everything with a 30s limit. Scoring
+    # with the agent's limits silently marks large or slow-but-valid results
+    # wrong and drifts from the official number -- observed as a 3-question
+    # disagreement on eval_500 before this was aligned.
     out = []
     for t in traces:
         gold = harness.gold_lines[t.question_id].split("\t")[0]
-        ex = bird_executor(harness.db_root, t.db_id)
+        ex = bird_executor(harness.db_root, t.db_id, max_rows=10_000_000)
         if not t.sql:
             out.append(0)
             continue
-        pred_res = ex.execute(t.sql)
-        gold_res = ex.execute(gold)
-        out.append(int(
-            pred_res.ok and gold_res.ok and pred_res.normalized() == gold_res.normalized()
-        ))
+        pred_res = ex.execute(t.sql, timeout_s=OFFICIAL_TIMEOUT_S)
+        gold_res = ex.execute(gold, timeout_s=OFFICIAL_TIMEOUT_S)
+        out.append(
+            int(pred_res.ok and gold_res.ok and pred_res.normalized() == gold_res.normalized())
+        )
     return out
 
 
@@ -257,8 +281,12 @@ def _plots(label, conf, correct, curve) -> None:
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.plot([0, 1], [0, 1], "--", color="grey", label="perfect calibration")
     if rc:
-        ax.plot([b["mean_predicted"] for b in rc], [b["observed_accuracy"] for b in rc],
-                "o-", label="observed")
+        ax.plot(
+            [b["mean_predicted"] for b in rc],
+            [b["observed_accuracy"] for b in rc],
+            "o-",
+            label="observed",
+        )
     ax.set_xlabel("predicted confidence")
     ax.set_ylabel("observed accuracy")
     ax.set_title(f"Reliability — {label}")
@@ -284,7 +312,9 @@ def _print_summary(label, result, reports, point, counts, n_fail, n_total) -> No
     print(f"\n{'=' * 62}\n{label}\n{'=' * 62}")
     print(f"execution accuracy   {result.accuracy:.1f}% +/- {result.ci95:.1f} (n={result.n})")
     for name, rep in reports.items():
-        print(f"{name:20s} Brier {rep['brier_score']:.4f}  ECE {rep['expected_calibration_error']:.4f}")
+        print(
+            f"{name:20s} Brier {rep['brier_score']:.4f}  ECE {rep['expected_calibration_error']:.4f}"
+        )
     if point:
         print(
             f"\noperating point      routed {point['pct_routed']:.0f}% of queries, "

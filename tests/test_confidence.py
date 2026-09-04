@@ -23,9 +23,7 @@ class FakeTrace:
 
 
 def test_features_detect_sql_structure():
-    t = FakeTrace(
-        sql="SELECT COUNT(*) FROM a JOIN b ON a.id=b.id WHERE x IN (SELECT y FROM c)"
-    )
+    t = FakeTrace(sql="SELECT COUNT(*) FROM a JOIN b ON a.id=b.id WHERE x IN (SELECT y FROM c)")
     f = extract_features(t, "how many?", "hint", n_schema_tables=5)
     assert f.has_aggregation == 1.0
     assert f.has_subquery == 1.0
@@ -86,16 +84,12 @@ def test_leakage_guard_rejects_evaluation_ids():
     """The guard CLAUDE.md calls project-invalidating if missed."""
     feats, correct = _synthetic(50)
     with pytest.raises(ValueError, match="LEAKAGE"):
-        ConfidenceModel().fit(
-            feats, correct, question_ids=list(range(50)), forbidden_ids={7, 99}
-        )
+        ConfidenceModel().fit(feats, correct, question_ids=list(range(50)), forbidden_ids={7, 99})
 
 
 def test_leakage_guard_allows_disjoint_ids():
     feats, correct = _synthetic(50)
-    ConfidenceModel().fit(
-        feats, correct, question_ids=list(range(50)), forbidden_ids={500, 501}
-    )
+    ConfidenceModel().fit(feats, correct, question_ids=list(range(50)), forbidden_ids={500, 501})
 
 
 def test_fit_requires_both_classes():

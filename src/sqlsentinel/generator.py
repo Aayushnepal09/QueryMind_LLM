@@ -56,9 +56,7 @@ SQL query:"""
 
 _FENCE = re.compile(r"```(?:sql|sqlite)?\s*(.*?)\s*```", re.S | re.I)
 _LEAD = re.compile(r"^\s*(SELECT|WITH)\b", re.I)
-_TRAILING_PROSE = re.compile(
-    r"\n\s*(?:This query|The query|Explanation|Note|\d+\.\s)", re.I
-)
+_TRAILING_PROSE = re.compile(r"\n\s*(?:This query|The query|Explanation|Note|\d+\.\s)", re.I)
 
 
 def extract_sql(text: str) -> str:
@@ -119,8 +117,7 @@ class SQLGenerator:
     ) -> str:
         joins = schema.join_paths()
         evidence_block = (
-            f"\nExternal knowledge (use this, it is required to answer correctly):\n"
-            f"{evidence}\n"
+            f"\nExternal knowledge (use this, it is required to answer correctly):\n{evidence}\n"
             if evidence and evidence.strip()
             else ""
         )

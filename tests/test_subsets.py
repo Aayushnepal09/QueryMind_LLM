@@ -41,9 +41,13 @@ def test_committed_splits_match_generated(splits):
 
 
 def test_stratification_matches_population(splits):
-    recs = {r["question_id"]: r for r in json.loads((BIRD / "dev.json").read_text(encoding="utf-8"))}
-    pop = {d: sum(r["difficulty"] == d for r in recs.values()) / len(recs)
-           for d in ("simple", "moderate", "challenging")}
+    recs = {
+        r["question_id"]: r for r in json.loads((BIRD / "dev.json").read_text(encoding="utf-8"))
+    }
+    pop = {
+        d: sum(r["difficulty"] == d for r in recs.values()) / len(recs)
+        for d in ("simple", "moderate", "challenging")
+    }
     ids = splits["eval_500"]
     for d, want in pop.items():
         got = sum(recs[i]["difficulty"] == d for i in ids) / len(ids)
@@ -51,5 +55,7 @@ def test_stratification_matches_population(splits):
 
 
 def test_all_databases_represented(splits):
-    recs = {r["question_id"]: r for r in json.loads((BIRD / "dev.json").read_text(encoding="utf-8"))}
+    recs = {
+        r["question_id"]: r for r in json.loads((BIRD / "dev.json").read_text(encoding="utf-8"))
+    }
     assert len({recs[i]["db_id"] for i in splits["eval_500"]}) == 11

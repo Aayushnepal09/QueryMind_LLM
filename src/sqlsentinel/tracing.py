@@ -34,9 +34,7 @@ def get_tracer(service_name: str = "sqlsentinel"):
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-        provider = TracerProvider(
-            resource=Resource.create({"service.name": service_name})
-        )
+        provider = TracerProvider(resource=Resource.create({"service.name": service_name}))
 
         endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
         if endpoint:
