@@ -72,11 +72,12 @@ class Agent:
     prune_schema: bool = False
     max_corrections: int = 0
     k: int = 1
+    naive_prompt: bool = False
     exemplars: ExemplarStore | None = None
     traces: list[AgentTrace] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        self.generator = SQLGenerator(self.client)
+        self.generator = SQLGenerator(self.client, naive=self.naive_prompt)
         if self.few_shot and self.exemplars is None:
             raise ValueError("few_shot requires an ExemplarStore")
 

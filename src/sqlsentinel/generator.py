@@ -54,6 +54,20 @@ Requirements:
 
 SQL query:"""
 
+# A deliberately minimal control: schema, question, "write SQL". No numbered
+# requirements, no join guidance, no dialect reminders, no formatting rules.
+# This is what someone gets before doing any prompt engineering at all, and it
+# exists to answer CLAUDE.md section 13's question of whether QueryMind's
+# tuned prompt was worth the effort that went into it.
+NAIVE_SYSTEM_PROMPT = "You are a helpful assistant."
+
+NAIVE_TEMPLATE = """Database schema:
+{schema}
+{evidence_block}
+Question: {question}
+
+Write a SQLite query that answers the question."""
+
 _FENCE = re.compile(r"```(?:sql|sqlite)?\s*(.*?)\s*```", re.S | re.I)
 _LEAD = re.compile(r"^\s*(SELECT|WITH)\b", re.I)
 _TRAILING_PROSE = re.compile(r"\n\s*(?:This query|The query|Explanation|Note|\d+\.\s)", re.I)
@@ -106,15 +120,28 @@ class Candidate:
 
 
 class SQLGenerator:
-    """Question + schema + evidence -> k candidate SQL strings."""
+    """Question + schema + evidence -> k candidate SQL strings.
 
-    def __init__(self, client: LLMClient, max_tokens: int = 512):
+    `naive=True` swaps the ported QueryMind prompt for a minimal control, so
+    the value of the prompt engineering itself can be measured rather than
+    assumed.
+    """
+
+    def __init__(self, client: LLMClient, max_tokens: int = 512, naive: bool = False):
         self.client = client
         self.max_tokens = max_tokens
+        self.naive = naive
 
     def build_prompt(
         self, question: str, schema: Schema, evidence: str = "", prompt_prefix: str = ""
     ) -> str:
+        if self.naive:
+            evidence_block = f"\n{evidence}\n" if evidence and evidence.strip() else ""
+            body = NAIVE_TEMPLATE.format(
+                schema=schema.to_prompt(), evidence_block=evidence_block, question=question
+            )
+            return f"{prompt_prefix}\n{body}" if prompt_prefix else body
+
         joins = schema.join_paths()
         evidence_block = (
             f"\nExternal knowledge (use this, it is required to answer correctly):\n{evidence}\n"
@@ -148,10 +175,11 @@ class SQLGenerator:
             temperature = 0.0 if k == 1 else 0.7
 
         user = self.build_prompt(question, schema, evidence, prompt_prefix)
+        system = NAIVE_SYSTEM_PROMPT if self.naive else SYSTEM_PROMPT
         out = []
         for i in range(k):
             resp = self.client.complete(
-                SYSTEM_PROMPT,
+                system,
                 user,
                 temperature=temperature,
                 sample_index=i,

@@ -85,6 +85,8 @@ results** — they are indistinguishable from correct answers without the gold
 query. Self-correction *raises* that share to 71% while halving loud execution
 errors: a safety regression concealed inside a 5-point accuracy improvement.
 
+![Silent failures](results/silent-failures.png)
+
 That gap between "the number went up" and "the system got safer" is the entire
 argument for building the confidence layer rather than chasing another accuracy
 point. Details, and seven more findings, in
@@ -102,11 +104,20 @@ Beyond the headline delta, eight secondary analyses
 | Most errors are **silent** — they run and return plausible rows | 59% of baseline errors; 71% after self-correction |
 | Per-database accuracy spread | **65 points** (22.6% → 88.1%), non-overlapping CIs |
 | Schema size predicts difficulty | **No** — no correlation significant; table count trends positive |
+| Confidence features that earn their place | **4 of 14**; `question_length` actively harms the model |
 | The +5 point gain churned | fixed 61, broke 36, **net negative on challenging questions** |
 | Question length predicts failure | r = −0.224, **p < 0.0001**; 61% → 14% across buckets |
 | BIRD's evidence field is worth | +20 points overall, **2.5× more on moderate than simple** |
 | Agreement tracks BIRD's difficulty labels | **No** — the signals are complementary, not redundant |
 | Zero-row string-filter failures are case problems | **No** — only 8% recoverable by relaxing the match |
+
+<p align="center">
+  <img src="results/per-database-accuracy.png" alt="Per-database accuracy" width="88%">
+</p>
+
+<p align="center">
+  <img src="results/feature-ablation.png" alt="Confidence feature ablation" width="76%">
+</p>
 
 ---
 
