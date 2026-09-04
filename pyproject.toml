@@ -75,6 +75,11 @@ packages = ["src/sqlsentinel"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# BIRD's official scorer is vendored verbatim so that "wrapped, not
+# reimplemented" is literally true and the file can be diffed against upstream.
+# Linting or formatting it would break exactly the property that makes it
+# citable, so it is excluded rather than fixed.
+extend-exclude = ["third_party"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4", "SIM", "RUF", "ARG", "PTH"]
@@ -107,4 +112,3 @@ filterwarnings = [
 
 [tool.coverage.run]
 source = ["src/sqlsentinel"]
-omit = ["*/api.py"]  # exercised via TestClient, not import-time coverage

@@ -57,7 +57,14 @@ Unaffected, and safe to cite:
 `retrieve(..., exclude_question_id=...)`, passed by the agent on every call, with
 regression tests in `tests/test_retrieval.py` covering both the leak and the
 guard. `k3-calib200` was re-run clean; its replacement lives in
-`results/traces/`.
+`results/traces/`:
+
+```bash
+uv run python -m sqlsentinel.eval   --predictor agent --split calib --subset 200 --provider ollama --workers 1   --k 3 --max-corrections 2 --few-shot 3   --tag k3-calib200-clean --dump-traces results/traces/k3-calib200.json
+```
+
+`--predictor agent` is not optional there: the CLI defaults to the stub
+predictor, so omitting it scores the ~3% chance floor instead of failing.
 
 ## Why this happened
 

@@ -89,7 +89,7 @@ Routing curves: `results/routing-*.png`
 | `combined-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 64.0% | $0.0000 | 0.0s |
 | `fewshot3-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 58.0% | $0.0000 | 20.1s |
 | `final-eval500` | ollama | `qwen2.5-coder:7b` | 500 | 50.4% | $0.0000 | 19.7s |
-| `k3-calib200` | ollama | `qwen2.5-coder:7b` | 200 | 78.0% | $0.0000 | 32.0s |
+| `k3-calib200` (do not cite) | ollama | `qwen2.5-coder:7b` | 200 | 78.0% | $0.0000 | 32.0s |
 | `k3-calib200-clean` | ollama | `qwen2.5-coder:7b` | 200 | 53.5% | $0.0000 | 49.5s |
 | `k3-eval200` | ollama | `qwen2.5-coder:7b` | 200 | 54.5% | $0.0000 | 30.5s |
 | `naive-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 58.0% | $0.0000 | 16.6s |
@@ -97,6 +97,8 @@ Routing curves: `results/routing-*.png`
 | `noevidence-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 42.0% | $0.0000 | 9.6s |
 | `pruned-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 18.3s |
 | `selfcorrect-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 0.0s |
+
+> **Do not cite** the run marked above: it predates the retrieval-leakage fix and its accuracy is inflated by ~24.5 points. The corrected re-run is `k3-calib200-clean`. It is left visible rather than deleted because the size of the contamination is itself a finding (`results/quarantine/README.md`).
 
 > Nominal cost is what the run *would* cost at list price. Actual spend was **$0**: the local model is free and Gemini ran on its free tier.
 

@@ -97,13 +97,32 @@ uv run python -m sqlsentinel.eval --split eval_500 --predictor agent \
 
 ## 7. Produce the report artifacts
 
+Everything in `results/` is generated. Nothing there is hand-written except the
+prose files, and `RESULTS.md` is regenerated rather than edited, so a reported
+number cannot drift from the measured one.
+
+The whole sweep, in order:
+
 ```bash
+scripts/run_experiments.sh                       # every configuration, sequentially
 uv run python scripts/analyze.py results/traces/final-eval500.json --label final \
-  --calib-traces results/traces/final-calib.json
+  --calib-traces results/traces/final-calib.json # calibration, routing, taxonomy
+uv run python scripts/compare.py --baseline baseline-dev50   # paired McNemar tests
+uv run python scripts/research.py                # the secondary findings
+uv run python scripts/figures.py                 # the PNGs those findings cite
+uv run python scripts/build_report.py            # regenerates results/RESULTS.md
 ```
 
-Writes calibration JSON + reliability diagram, the routing curve, and the
-failure taxonomy into `results/`.
+| Script | Writes | Notes |
+|---|---|---|
+| `run_experiments.sh` | `results/traces/*.json` | One run at a time — one GPU, so concurrency thrashes. Skips any tag whose traces already exist, and every LLM call is cached, so an interrupted sweep resumes rather than repeats. |
+| `analyze.py` | `calibration-*`, `routing-*`, `failures-*` | Also hard-fails if its per-question labels disagree with BIRD's official scorer by more than half a question. |
+| `compare.py` | `comparisons.json` | Exact McNemar on shared questions, not independent intervals. |
+| `research.py` | `findings.json` | The secondary analyses behind `FINDINGS.md`. |
+| `figures.py` | `results/*.png` | Separate from `analyze.py` so a plotting change never re-runs an evaluation. |
+| `build_report.py` | `results/RESULTS.md` | Reads MLflow and the artifacts above. |
+| `build_queue.py` | `results/review_queue.json` | Feeds the review UI through the same router the API uses, so the queue is what production would actually route rather than a hand-picked sample. |
+| `check_regression.py` | — | The CI accuracy gate. |
 
 ## 8. Run the service
 
@@ -161,7 +180,7 @@ Cloned to an empty directory and installed from scratch:
 | Check | Result |
 |---|---|
 | `uv sync --extra dev` | clean install |
-| `uv run pytest` | **184 passed, 12 skipped** — the skips are the tests that need the BIRD databases, which self-skip when absent |
+| `uv run pytest` | **294 passed, 2 skipped** — the skips need the BIRD databases and self-skip when absent |
 | `uv run ruff check` / `ruff format --check` | clean |
 | `uv run sqlsentinel-eval --help` | works |
 | Running the eval without BIRD present | fails with an actionable message pointing here |

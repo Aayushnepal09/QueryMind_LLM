@@ -22,11 +22,11 @@ The original is preserved at tag `v0-querymind`.
 
 | File | Lines | Decision | Reason |
 |---|---|---|---|
-| `streamlit_app.py` | 503 | **Split, then left on `main`** | ~85% presentation (CSS, hero, bcrypt login). ~15% was the actual asset — the schema block, the generation prompt, the SQL extractor — all three ported. Superseded by `app/review_ui.py` and `src/sqlsentinel/api.py`. |
+| `streamlit_app.py` | 503 | **Split, then not carried to `main`** | ~85% presentation (CSS, hero, bcrypt login). ~15% was the actual asset — the schema block, the generation prompt, the SQL extractor — all three ported. Superseded by `app/review_ui.py` and `src/sqlsentinel/api.py`. |
 | `utils.py` | 24 | **Ported** | Its DSN builder is now `executor.postgres_dsn_from_env()`, behind the dialect boundary, with tests covering the URL-encoding that `streamlit_app.py`'s copy got wrong. |
-| `populate_db.py` | 220 | **Left on `main`** | One-off SQLite→Postgres migration for the demo database. Unrelated to BIRD, and not part of the evaluated system. |
+| `populate_db.py` | 220 | **Not carried to `main`** | One-off SQLite→Postgres migration for the demo database. Unrelated to BIRD, and not part of the evaluated system. |
 | `test_render_database.py` | 27 | **Delete** | Not a test — a script with a bare top-level call that connects to prod on import. Replaced by real tests. |
-| `generate_password.py` | 8 | **Left on `main`** | Bcrypt helper for the demo login, which `sqlsentinel` does not have (spec §3 lists auth as a non-goal). |
+| `generate_password.py` | 8 | **Not carried to `main`** | Bcrypt helper for the demo login, which `sqlsentinel` does not have (spec §3 lists auth as a non-goal). |
 | `normalized.db` | 15 MB | **Untracked** | Moved to `data/`, purged from history. |
 | `.idea/` | — | **Untracked** | IDE-local config. |
 | `README.md` | — | **Rewritten** | Stale: claims SQLite and "Gemini Pro"; code uses Postgres and `gemini-2.5-flash`. |
@@ -50,7 +50,7 @@ spec §1 was written expecting more prior art than is actually present. Correcti
 
 | Spec assumed | Reality |
 |---|---|
-| A FastAPI layer to rewrite | None exists. `feat/api-rewrite` is a greenfield build. |
+| A FastAPI layer to rewrite | None exists. `api.py` is a greenfield build, not a rewrite. |
 | Chain-of-thought prompting | The prompt is zero-shot, single-shot. No CoT. |
 | Few-shot exemplars | None. Retrieval was built from nothing. |
 | Schema introspection logic | None — the schema is a hardcoded string literal. |

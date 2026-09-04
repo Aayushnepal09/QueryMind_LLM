@@ -300,23 +300,43 @@ def section_failures() -> str:
     return "\n".join(lines)
 
 
+# Runs produced before the retrieval-leakage fix. MLflow still holds them, and
+# they are deliberately not deleted (results/quarantine/README.md explains why),
+# but an unmarked 78.0% sitting in a results table is exactly the kind of number
+# that gets quoted out of context. Marked at the point of generation so the
+# marking cannot be forgotten the next time the report is rebuilt.
+QUARANTINED = {"k3-calib200"}
+
+
 def section_cost(runs: dict[str, dict]) -> str:
     lines = [
         "| Run | Provider | Model | n | EX | nominal cost | mean latency |",
         "|---|---|---|---:|---:|---:|---:|",
     ]
     any_row = False
+    flagged = False
     for tag, r in sorted(runs.items()):
         if r["ex"] is None or r["provider"] in (None, "none"):
             continue
         any_row = True
+        mark = " (do not cite)" if tag in QUARANTINED else ""
+        flagged = flagged or bool(mark)
         lines.append(
-            f"| `{tag}` | {r['provider']} | `{r['model']}` | {r['n']} | "
+            f"| `{tag}`{mark} | {r['provider']} | `{r['model']}` | {r['n']} | "
             f"{fmt(r['ex'])}% | ${fmt(r['cost'], '.4f')} | {fmt(r['latency'], '.1f')}s |"
         )
     if not any_row:
         return "_No agent runs recorded yet._\n"
     lines.append("")
+    if flagged:
+        lines.append(
+            "> **Do not cite** the run marked above: it predates the "
+            "retrieval-leakage fix and its accuracy is inflated by ~24.5 points. "
+            "The corrected re-run is `k3-calib200-clean`. It is left visible "
+            "rather than deleted because the size of the contamination is itself "
+            "a finding (`results/quarantine/README.md`)."
+        )
+        lines.append("")
     lines.append(
         "> Nominal cost is what the run *would* cost at list price. Actual spend "
         "was **$0**: the local model is free and Gemini ran on its free tier."

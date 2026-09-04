@@ -1,9 +1,9 @@
 # SQLSentinel
 
-[![CI](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml/badge.svg?branch=sqlsentinel)](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml)
+[![CI](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-264%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-296%20passing-brightgreen)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](pyproject.toml)
 
 **A text-to-SQL agent that knows when it's wrong.**
@@ -76,7 +76,7 @@ two disagree on a single baseline question out of 500 (45.6% vs 45.4%).
 **→ [results/RESULTS.md](results/RESULTS.md)** — generated from MLflow and the
 analysis artifacts, never hand-edited, so the reported numbers cannot drift from
 the measured ones.
-**→ [results/FINDINGS.md](results/FINDINGS.md)** — eight secondary findings the
+**→ [results/FINDINGS.md](results/FINDINGS.md)** — nine secondary findings the
 headline number conceals.
 **→ [results/technique-notes.md](results/technique-notes.md)** — why each
 technique moved the number, or didn't.
@@ -114,7 +114,7 @@ point. Details, and seven more findings, in
 
 ## What the evaluation found
 
-Beyond the headline delta, eight secondary analyses
+Beyond the headline delta, nine secondary analyses
 ([results/FINDINGS.md](results/FINDINGS.md)):
 
 | Finding | Measured |
@@ -242,14 +242,14 @@ Stratified on difficulty × database — `eval_500` matches the population
 distribution to within 0.1 points and covers all 11 databases.
 
 The `calib`/`eval_500` disjointness is the project's most important invariant.
-the spec calls training and reporting on the same questions *"the one mistake
+The spec calls training and reporting on the same questions *"the one mistake
 that would invalidate the whole project"*, so it is enforced in code:
 `ConfidenceModel.fit()` takes the evaluation ids as `forbidden_ids` and raises
 on any overlap. It is a guard, not a convention.
 
 Why 500 and not all 1,534: at n=500 the 95% CI is ±4.4 points, enough to support
 the size of delta these techniques produce, while a full run at k=5 costs
-several times the compute for a interval only ~2 points tighter.
+several times the compute for an interval only ~2 points tighter.
 
 ---
 
@@ -409,6 +409,7 @@ src/sqlsentinel/
 ├── llm.py             provider abstraction + response cache
 ├── schema_linker.py   introspection, DDL rendering, pruning
 ├── generator.py       prompt + SQL extraction
+├── question.py        checks a question against the schema before answering
 ├── executor.py        read-only SQLite/Postgres, timeout, normalization
 ├── retrieval.py       TF-IDF exemplar retrieval (calib split only)
 ├── agent.py           orchestration, self-correction, k-sample voting
@@ -422,7 +423,7 @@ app/review_ui.py       Streamlit review queue
 scripts/               experiment sweep, analysis, report generation
 third_party/           BIRD's official scorer, wrapped not reimplemented
 results/               committed metrics, figures, splits, traces
-tests/                 264 tests, 92% coverage
+tests/                 296 tests, 92% coverage
 ```
 
 ## Documentation
