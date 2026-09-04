@@ -333,3 +333,116 @@ This file previously stated that k=3 "is not enough to tune a threshold finely"
 and that finer control "needs larger k". That was measured against v1 and is
 wrong as a general claim. Calibration, not more samples, was the missing piece —
 and calibration costs one model fit rather than 5/3× the generation budget.
+
+---
+
+# Provider comparison — blocked, and the blockage is the answer
+
+CLAUDE.md §13 asks: *"Which model as primary? Run Phase 1 against two and pick
+on cost-per-correct-answer, not raw accuracy."*
+
+**The accuracy half of that comparison could not be completed.** A 50-question
+run on `gemini-2.5-flash` reached 23 questions before the free tier's daily
+quota was exhausted; a fresh call then returns `429 RESOURCE_EXHAUSTED`
+immediately rather than after a retry delay.
+
+## What was measured
+
+| | Local `qwen2.5-coder:7b` | `gemini-2.5-flash` free tier |
+|---|---|---|
+| Cost in dollars | $0 | $0 |
+| Nominal cost at list price | $0 | $0.0405 for 39 calls |
+| Mean latency per call | ~17 s | **21.9 s** (including enforced backoff) |
+| Latency excluding backoff | ~17 s | ~3 s |
+| Sustained throughput | ~3–8 /min, indefinitely | **~0.8 /min, then a hard daily stop** |
+| Questions completed in one day | 500+ (repeatedly) | **~40** |
+
+## The answer to §13
+
+**Local is the only viable primary, and not because it is more accurate.**
+
+Per *call*, the hosted model is roughly six times faster — 3 s against 17 s. Per
+*evaluation*, it cannot finish: a single 500-question run needs more requests
+than the free tier grants in a day, so the comparison the spec asks for cannot
+be run at all on free infrastructure.
+
+That is a genuine engineering conclusion rather than a missing result. On a zero
+budget the binding constraint is not latency, price or accuracy — it is **quota**.
+A slower model with no ceiling beats a faster one with a daily cap, by a wide
+margin, for any workload measured in hundreds of calls.
+
+## What remains unmeasured
+
+The accuracy comparison itself. `gemini-2.5-flash` answered 23 of the 50
+questions before the quota ran out, which is too thin to report a per-provider
+accuracy number against a ±13-point interval, and no number is offered here.
+
+Finishing it needs either a paid key or one 50-question run per day across two
+days. Neither was in scope for a zero-budget project, and inventing a figure
+from 23 questions would contradict the reporting rules this project sets for
+itself.
+
+---
+
+# Does QueryMind's prompt engineering do anything?
+
+CLAUDE.md §13: *"Does QueryMind's existing prompting beat a naive baseline on
+BIRD? Worth knowing and reporting either way."*
+
+The ported prompt carries eight numbered requirements, explicit join-path
+guidance, dialect reminders and formatting rules — 2,025 characters. The control
+strips all of it: schema, question, *"Write a SQLite query that answers the
+question."* — 1,130 characters, with a bare `"You are a helpful assistant."`
+system message.
+
+## Result
+
+| Prompt | EX (n=500) | 95% CI |
+|---|---:|---:|
+| Ported QueryMind prompt | 45.6% | ±4.3 |
+| **Naive control** | **49.4%** | ±4.4 |
+
+Paired on the same 500 questions: the naive prompt is **+3.8 points ahead**,
+helping 59 questions and hurting 40. **p = 0.070.**
+
+## What can and cannot be claimed
+
+**Not claimable:** that the naive prompt is better. p = 0.070 does not clear
+0.05, and this project does not get to relax its own threshold because a result
+is interesting.
+
+**Claimable, and the point:** the tuned prompt shows **no benefit whatsoever**,
+and what evidence exists points the other way. The eight numbered requirements,
+the join guidance, the dialect reminders — the most visible engineering effort
+in the original project — buy nothing measurable, and are more likely to be
+costing accuracy than adding it.
+
+That is a real answer to §13, and the more useful one. It says the improvement
+in this project came from self-consistency and routing, not from prompt
+craftsmanship, and it says so with a number instead of an impression.
+
+## The subset flipped the sign
+
+The same ablation on `dev_50` gave the **opposite direction**:
+
+| Split | n | tuned | naive | direction |
+|---|---:|---:|---:|---|
+| `dev_50` | 50 | 62.0% | 58.0% | tuned ahead by 4.0 |
+| **`eval_500`** | **500** | **45.6%** | **49.4%** | **naive ahead by 3.8** |
+
+`dev_50` is a subset of `eval_500`, so this is the same agent on the same
+benchmark. At n=50 the effect not only failed to reach significance, it pointed
+the wrong way by almost exactly the same margin.
+
+This is the second time small-sample noise produced a confidently wrong picture
+here — the first being the 17-point accuracy overestimate recorded above. Had
+this ablation been run only on the development loop, the write-up would have
+concluded that QueryMind's prompt engineering helps. **The number would have
+been wrong in direction, not just magnitude.**
+
+## Caveat
+
+One model (`qwen2.5-coder:7b`), one benchmark. Instruction-heavy prompts may
+help larger models, or models less trained on SQL. What is measured is that on
+BIRD dev with a 7B code model, this particular tuned prompt does not earn its
+tokens.

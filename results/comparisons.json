@@ -24,6 +24,17 @@
       "significant": true
     },
     {
+      "tag": "naive-eval500",
+      "accuracy": 49.2,
+      "n": 500,
+      "delta_points": 3.8,
+      "helped": 59,
+      "hurt": 40,
+      "discordant": 99,
+      "p_value": 0.06990057369494637,
+      "significant": false
+    },
+    {
       "tag": "combined-dev50",
       "accuracy": 64.0,
       "n": 50,
@@ -69,6 +80,17 @@
     },
     {
       "tag": "fewshot3-dev50",
+      "accuracy": 58.0,
+      "n": 50,
+      "delta_points": -4.0,
+      "helped": 6,
+      "hurt": 8,
+      "discordant": 14,
+      "p_value": 0.79052734375,
+      "significant": false
+    },
+    {
+      "tag": "naive-dev50",
       "accuracy": 58.0,
       "n": 50,
       "delta_points": -4.0,

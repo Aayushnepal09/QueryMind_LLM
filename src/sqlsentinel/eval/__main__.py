@@ -74,6 +74,11 @@ def main() -> None:
     )
     ap.add_argument("--no-evidence", action="store_true", help="ablate BIRD's evidence field")
     ap.add_argument(
+        "--naive-prompt",
+        action="store_true",
+        help="use the minimal control prompt instead of the ported QueryMind one",
+    )
+    ap.add_argument(
         "--few-shot", type=int, default=0, help="retrieve N exemplars from the calib split"
     )
     ap.add_argument(
@@ -129,6 +134,7 @@ def main() -> None:
             few_shot=args.few_shot,
             prune_schema=args.prune_schema,
             max_corrections=args.max_corrections,
+            naive_prompt=args.naive_prompt,
             k=args.k,
             exemplars=store,
         )
@@ -155,6 +161,7 @@ def main() -> None:
                     "predictor": args.predictor,
                     "tag": args.tag or args.predictor,
                     "few_shot": args.few_shot,
+                    "naive_prompt": args.naive_prompt,
                     "prune_schema": args.prune_schema,
                     "max_corrections": args.max_corrections,
                     "k": args.k,
