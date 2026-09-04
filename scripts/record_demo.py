@@ -103,6 +103,23 @@ def record(url: str, out: Path, width: int = 1180, height: int = 840) -> None:
         glide(320)
         shot(page, READ + 500)  # the answer and the plain-English description
 
+        # --- ask again, this time with a word that is not a column at all.
+        # "strongest" names a *value* in the data rather than a table or column,
+        # so the checker explains the reading it is using instead of flagging it.
+        glide(-320)
+        ask.fill("")
+        for chunk in ("who is ", "the strongest?"):
+            ask.press_sequentially(chunk, delay=26)
+            shot(page, GLIDE + 140)
+        shot(page, BEAT)
+
+        page.get_by_role("button", name="Ask").first.click()
+        page.get_by_text("Reading", exact=False).first.wait_for(timeout=180_000)
+        page.wait_for_timeout(1200)
+        shot(page, READ + 900)  # "Reading strongest as Strength in attribute_name"
+        glide(300)
+        shot(page, READ + 500)
+
         # --- over to the review queue
         page.get_by_role("tab", name="Review queue", exact=False).first.click()
         page.wait_for_timeout(2200)

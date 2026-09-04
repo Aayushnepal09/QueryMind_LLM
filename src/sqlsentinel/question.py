@@ -173,9 +173,24 @@ class Suggestion:
 
 
 @dataclass
+class ValueMatch:
+    """A question word that names a *value* in the data, not a column.
+
+    "who is the strongest?" contains no column called `strongest`, but the
+    `attribute_name` column holds the value `Strength`. Reporting that is
+    useful; reporting "no column matches strongest" is noise.
+    """
+
+    word: str
+    value: str
+    column: str
+
+
+@dataclass
 class QuestionCheck:
     question: str
     suggestions: list[Suggestion] = field(default_factory=list)
+    value_matches: list[ValueMatch] = field(default_factory=list)
 
     @property
     def likely_typos(self) -> list[Suggestion]:
@@ -262,11 +277,44 @@ def schema_vocabulary(schema) -> set[str]:
     return vocab
 
 
+# Comparatives and superlatives: "strongest" and "stronger" both point at
+# "strength". Stripped before matching so the question's grammar does not hide
+# the concept the data actually holds.
+_SUFFIXES = ("est", "er", "ing", "ed", "s")
+
+
+def _stem(word: str) -> str:
+    for suffix in _SUFFIXES:
+        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
+            return word[: -len(suffix)]
+    return word
+
+
+def value_index(schema) -> dict[str, tuple[str, str]]:
+    """Map words appearing in sample data values to (value, column).
+
+    The schema carries a few example values per column. Those are what a
+    question usually refers to -- people ask about "Marvel" and "female" and
+    "strength", none of which are column names.
+    """
+    index: dict[str, tuple[str, str]] = {}
+    for table in schema.tables:
+        for col in table.columns:
+            for sample in col.samples:
+                for word in re.findall(r"[A-Za-z]{3,}", str(sample)):
+                    key = word.lower()
+                    index.setdefault(key, (str(sample), f"{table.name}.{col.name}"))
+                    index.setdefault(_stem(key), (str(sample), f"{table.name}.{col.name}"))
+    return index
+
+
 def check(question: str, schema=None) -> QuestionCheck:
-    """Flag words that match neither ordinary English nor the schema."""
+    """Flag words the database cannot account for, and explain the ones it can."""
     vocab = set(COMMON_WORDS)
+    values: dict[str, tuple[str, str]] = {}
     if schema is not None:
         vocab |= schema_vocabulary(schema)
+        values = value_index(schema)
 
     result = QuestionCheck(question=question)
     seen: set[str] = set()
@@ -287,7 +335,49 @@ def check(question: str, schema=None) -> QuestionCheck:
         if raw[0].isupper() and raw != question.split()[0]:
             continue
 
+        # A stemmed form may still be schema vocabulary: "powers" -> "power".
+        stem = _stem(word)
+        if stem in vocab:
+            continue
+
+        # Does it name a value in the data rather than a column? That is an
+        # explanation, not a problem, so it is reported separately.
+        hit = values.get(word) or values.get(stem)
+        if not hit:
+            # Looser than the typo cutoff on purpose: "strong" against
+            # "strength" scores 0.71, and relating the two is exactly the job.
+            near = difflib.get_close_matches(stem, values.keys(), n=1, cutoff=0.68)
+            hit = values.get(near[0]) if near else None
+        if hit:
+            result.value_matches.append(ValueMatch(word=raw, value=hit[0], column=hit[1]))
+            continue
+
         match = difflib.get_close_matches(word, vocab, n=1, cutoff=SIMILARITY)
         result.suggestions.append(Suggestion(word=raw, suggestion=match[0] if match else None))
 
     return result
+
+
+def describe_contents(schema, per_column: int = 3, max_columns: int = 6) -> list[str]:
+    """A short account of what this database actually holds.
+
+    Shown when a question uses a word the database cannot account for. Telling
+    someone "nothing matches 'fastest'" leaves them stuck; showing them that the
+    data has attribute names of Intelligence, Strength and Speed lets them
+    rephrase and get an answer. Lexical matching will never connect "fastest"
+    to "Speed" -- that is semantic -- so the honest fallback is to show the
+    vocabulary and let the person make the leap.
+    """
+    out: list[str] = []
+    for table in schema.tables:
+        for col in table.columns:
+            values = [
+                s
+                for s in col.samples
+                if s and not s.replace(".", "").replace("-", "").isdigit() and len(s) > 1
+            ][:per_column]
+            if len(values) >= 2:
+                out.append(f"**{col.name}**: {', '.join(values)}")
+            if len(out) >= max_columns:
+                return out
+    return out

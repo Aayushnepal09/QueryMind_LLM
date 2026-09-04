@@ -36,6 +36,7 @@ import theme
 from sqlsentinel.executor import bird_executor
 from sqlsentinel.explain import describe_confidence, explain
 from sqlsentinel.question import check as check_question
+from sqlsentinel.question import describe_contents
 from sqlsentinel.schema_linker import bird_schema
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -197,41 +198,57 @@ def render_ask() -> None:
             value=3,
         )
 
-    # A form so Enter submits. Without one, Enter triggers a rerun in which the
-    # button is False, so the question is silently dropped and the field clears
-    # -- it looks like the app ignored you.
-    with st.form("ask_form", border=False):
-        f1, f2 = st.columns([4, 1], vertical_alignment="bottom")
-        with f1:
-            question = st.text_input(
-                "Ask a question",
-                placeholder="e.g. How many schools are in Alameda county?",
-                key="ask_q",
-            )
-        with f2:
-            go = st.form_submit_button("Ask", type="primary", use_container_width=True)
+    f1, f2 = st.columns([4, 1], vertical_alignment="bottom")
+    with f1:
+        question = st.text_input(
+            "Ask a question",
+            placeholder="e.g. How many schools are in Alameda county?",
+            key="ask_q",
+        )
+    with f2:
+        st.button("Ask", type="primary", use_container_width=True)
 
-    if not (go and question.strip()):
-        return
-
+    # Both Enter and the button trigger a rerun; only the box's contents decide
+    # whether to answer. Reading the button instead would drop questions
+    # submitted with Enter, since the button is False on that rerun -- the field
+    # appears to clear itself and the app looks like it ignored you.
     question = question.strip()
+    if not question:
+        return
 
     # Show what the database does and does not recognise *before* the answer.
     # A typo does not stop the model producing confident SQL -- it silently
     # guesses, and the user has no way to see a guess was made.
-    review = check_question(question, bird_schema(str(DB_ROOT), db_id))
+    schema = bird_schema(str(DB_ROOT), db_id)
+    review = check_question(question, schema)
+
     if review.likely_typos:
         fixes = ", ".join(f"**{s.word}** → **{s.suggestion}**" for s in review.likely_typos)
         st.warning(f"Possible typo: {fixes}", icon="✏️")
         st.caption(f"Reading it as: *{review.corrected()}*")
         st.caption("Edit the question above and ask again if that is what you meant.")
+
+    # A word that names a value rather than a column is an explanation, not a
+    # problem: say what it maps to so the answer below can be judged.
+    if review.value_matches:
+        for v in review.value_matches:
+            st.caption(f"Reading **{v.word}** as `{v.value}` in `{v.column}`.")
+
     if review.unrecognised:
         words = ", ".join(f"**{s.word}**" for s in review.unrecognised)
         st.info(
-            f"The `{db_id}` database has no table or column matching {words}. "
-            f"The answer below is the model's best guess at what you meant.",
+            f"Nothing in `{db_id}` matches {words}, so the answer below is the "
+            f"model's best guess. This database can answer questions about:",
             icon="🔎",
         )
+        contents = describe_contents(schema)
+        if contents:
+            st.markdown(
+                '<div class="plain">'
+                + "".join(f'<div class="plain-item">{c}</div>' for c in contents)
+                + "</div>",
+                unsafe_allow_html=True,
+            )
 
     with st.spinner(f"Generating {k} candidate quer{'y' if k == 1 else 'ies'}..."):
         try:

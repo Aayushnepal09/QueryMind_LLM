@@ -140,3 +140,50 @@ def test_empty_question_is_clean():
 def test_suggestion_is_a_dataclass():
     s = Suggestion(word="x", suggestion=None)
     assert s.word == "x" and s.suggestion is None
+
+
+# ---------------------------------------------------------------- value matches
+
+
+def test_a_word_naming_a_data_value_is_explained_not_flagged():
+    """ "strongest" has no column, but the data holds the value "Strength"."""
+    from sqlsentinel.schema_linker import Column, Schema, Table
+
+    s = Schema(
+        db_id="superhero",
+        tables=[
+            Table(
+                name="attribute",
+                columns=[
+                    Column(
+                        name="attribute_name",
+                        type="TEXT",
+                        samples=["Intelligence", "Strength", "Speed"],
+                    )
+                ],
+            )
+        ],
+    )
+    r = check("who is the strongest?", s)
+    assert [(v.word, v.value) for v in r.value_matches] == [("strongest", "Strength")]
+    assert not r.unrecognised
+
+
+def test_describe_contents_lists_queryable_values():
+    """Shown when nothing matches, so the asker can rephrase and get an answer."""
+    from sqlsentinel.question import describe_contents
+    from sqlsentinel.schema_linker import Column, Schema, Table
+
+    s = Schema(
+        db_id="x",
+        tables=[
+            Table(
+                name="alignment",
+                columns=[Column(name="alignment", type="TEXT", samples=["Good", "Bad", "Neutral"])],
+            ),
+            Table(name="n", columns=[Column(name="count", type="INTEGER", samples=["1", "2"])]),
+        ],
+    )
+    out = describe_contents(s)
+    assert any("alignment" in line and "Good" in line for line in out)
+    assert not any("count" in line for line in out)  # numeric samples are not vocabulary

@@ -31,9 +31,13 @@ NL question ──► Schema Linker ──► SQL Generator ──► Self-Corre
 ![Review UI](results/review-ui-demo.gif)
 
 Ask a question and the answer comes back with its confidence stated in words,
-the query described in plain English, and any word the database does not
-recognise flagged — because a typo does not stop the model producing confident
-SQL, it just makes it guess silently.
+the query described in plain English, and the question itself checked against the
+schema — because a typo does not stop the model producing confident SQL, it just
+makes it guess silently. A word close to a column is offered as a correction; a
+word that names a *value* rather than a column is explained rather than flagged
+("reading **strongest** as `Strength` in `attribute.attribute_name`"); a word the
+database cannot account for at all gets a sample of what the data does hold, so
+the question can be rephrased instead of silently mis-answered.
 
 When the agent is unsure, the query goes to a person instead — and the queue is
 built so a **non-engineer** can action it: the question, its confidence *in words*
