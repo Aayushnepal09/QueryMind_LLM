@@ -181,6 +181,10 @@ def main() -> None:
             forbidden_ids=set(splits["eval_500"]),
         )
         model.save(RESULTS / f"confidence-model-{args.label}.pkl")
+        # Also write the canonical path the API loads at startup, so a freshly
+        # fitted scorer actually reaches production instead of sitting in
+        # results/ under a run-specific name.
+        model.save(RESULTS / "confidence-model.pkl")
         conf = model.predict(feats)
         reports["v2_calibrated"] = save_calibration_report(
             RESULTS / f"calibration-{args.label}-v2.json",
