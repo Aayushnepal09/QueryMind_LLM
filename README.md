@@ -204,6 +204,28 @@ review: any non-`SELECT` statement, a failed execution, an oversized result set,
 an unfiltered scan returning many rows. A `DELETE` does not become safe because
 the model felt sure about it.
 
+### Does the confidence score mean anything?
+
+<p align="center">
+  <img src="results/calibration-k3-eval200.png" alt="Reliability diagram" width="46%">
+  <img src="results/routing-k3-eval200.png" alt="Routing curve" width="52%">
+</p>
+
+**Left — reliability.** Observed accuracy rises monotonically with predicted
+confidence across all four buckets (0.08 / 0.23 / 0.58 / 0.69), so the score
+ranks risk correctly. It sits below the diagonal throughout, meaning the raw
+agreement rate is systematically *overconfident* — which is what the v2
+calibration layer exists to correct. Marker area is bin population.
+
+**Right — routing.** Every point above the dashed line beats routing at random.
+At the marked operating point, **sending 22% of queries to review catches 39% of
+all incorrect answers**, and what still auto-executes is 65.0% correct rather
+than 54.5%.
+
+The curve is a step function because k=3 admits only four possible confidence
+values — a concrete answer to "what is the right k?": three separates risk into
+four useful bands, and is not enough to tune a threshold finely.
+
 ---
 
 ## Safety
