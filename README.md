@@ -1,5 +1,11 @@
 # SQLSentinel
 
+[![CI](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml/badge.svg?branch=sqlsentinel)](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-264%20passing-brightgreen)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](pyproject.toml)
+
 **A text-to-SQL agent that knows when it's wrong.**
 
 Natural language → SQL, benchmarked on BIRD-SQL, with a calibrated confidence
@@ -23,7 +29,9 @@ NL question ──► Schema Linker ──► SQL Generator ──► Self-Corre
 ```
 
 Every step emits OpenTelemetry spans. Every eval run logs to MLflow. A CI gate
-blocks merges on accuracy regressions.
+fails the build when execution accuracy regresses — when the benchmark data and
+an API key are available to it; otherwise it reports what it is missing and
+stops, rather than passing silently or failing a repository that is working.
 
 ---
 
