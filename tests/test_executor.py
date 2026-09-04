@@ -142,12 +142,20 @@ def test_dsn_from_env(monkeypatch):
 
     for k, v in {
         "POSTGRES_USERNAME": "u",
-        "POSTGRES_PASSWORD": "p",
+        "POSTGRES_PASSWORD": "p",  # ggignore - single character, not a credential
         "POSTGRES_SERVER": "h:5432",
         "POSTGRES_DATABASE": "d",
     }.items():
         monkeypatch.setenv(k, v)
     assert postgres_dsn_from_env() == "postgresql://u:p@h:5432/d?sslmode=require"
+
+
+# Synthetic value, never a real credential. It exists to exercise the three
+# URL-reserved characters (@ / :) that QueryMind's in-app DSN builder failed to
+# encode. Secret scanners flag password-shaped assignments regardless of
+# content, so it is named to make its nature obvious and annotated for
+# GitGuardian.
+FAKE_PASSWORD_WITH_RESERVED_CHARS = "not-a-real-value@x/y:z"  # ggignore
 
 
 def test_dsn_url_encodes_the_password(monkeypatch):
@@ -156,14 +164,16 @@ def test_dsn_url_encodes_the_password(monkeypatch):
 
     for k, v in {
         "POSTGRES_USERNAME": "u",
-        "POSTGRES_PASSWORD": "p@ss/w:rd",
+        "POSTGRES_PASSWORD": FAKE_PASSWORD_WITH_RESERVED_CHARS,
         "POSTGRES_SERVER": "h",
         "POSTGRES_DATABASE": "d",
     }.items():
         monkeypatch.setenv(k, v)
     dsn = postgres_dsn_from_env()
-    assert "p%40ss%2Fw%3Ard" in dsn
-    assert "p@ss/w:rd" not in dsn
+
+    # @ -> %40, / -> %2F, : -> %3A
+    assert "not-a-real-value%40x%2Fy%3Az" in dsn
+    assert FAKE_PASSWORD_WITH_RESERVED_CHARS not in dsn
 
 
 def test_dsn_missing_vars_names_them(monkeypatch):

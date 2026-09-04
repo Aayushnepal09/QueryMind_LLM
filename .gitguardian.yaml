@@ -1,0 +1,24 @@
+# GitGuardian configuration.
+#
+# The only finding this repository has produced was a synthetic password in
+# tests/test_executor.py, used to assert that the Postgres DSN builder
+# URL-encodes reserved characters. It is not a credential and never was.
+#
+# Scoped narrowly on purpose: broad ignores are how real leaks get missed.
+
+version: 2
+
+secret:
+  ignored-paths:
+    # Committed model outputs and metrics. Free text, no credentials, and large
+    # enough that scanning them produces noise rather than signal.
+    - "results/traces/**"
+    - "results/quarantine/**"
+
+  ignored-matches:
+    - name: "Synthetic DSN password in tests/test_executor.py"
+      match: "not-a-real-value@x/y:z"
+
+  # Real credentials must never be committed; .env is gitignored and the
+  # pre-commit hooks include detect-private-key.
+  show-secrets: false
