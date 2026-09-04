@@ -30,8 +30,13 @@ NL question ──► Schema Linker ──► SQL Generator ──► Self-Corre
 
 ![Review UI](results/review-ui-demo.gif)
 
-When the agent is unsure, the query goes to a person — and the queue is built so
-a **non-engineer** can action it: the question, its confidence *in words*
+Ask a question and the answer comes back with its confidence stated in words,
+the query described in plain English, and any word the database does not
+recognise flagged — because a typo does not stop the model producing confident
+SQL, it just makes it guess silently.
+
+When the agent is unsure, the query goes to a person instead — and the queue is
+built so a **non-engineer** can action it: the question, its confidence *in words*
 ("all 3 attempts produced different answers"), the answer it would return, and a
 plain-English description of the query, with the SQL one click away. Engineers
 get the same queue with the SQL first and an editor. Both act on the same items

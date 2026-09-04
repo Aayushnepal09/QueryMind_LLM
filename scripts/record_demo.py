@@ -3,9 +3,10 @@
     uv run streamlit run app/review_ui.py --server.headless true --server.port 8610
     uv run python scripts/record_demo.py
 
-Shows the app being *used*, not just displayed: filtering the queue, opening a
-query, typing a note, recording a decision and watching the counters move, then
-switching to the engineer view and editing the SQL.
+Shows the app being *used*, not just displayed: asking a live question and
+watching a typo get flagged, then filtering the review queue, opening a query,
+typing a note, recording a decision and watching the counters move, and finally
+switching to the engineer view.
 
 State changes are the point. A reviewer watching this should see the queue
 respond — the pending count drop, an item leave the list — because that is what
@@ -36,9 +37,9 @@ RESULTS = REPO_ROOT / "results"
 # Two speeds. Scroll steps are short so movement reads as motion rather than as
 # jumps; the frames a viewer needs to actually read are held long enough to
 # read. An earlier cut used 3-5s uniformly, which was both slow and jerky.
-GLIDE = 170  # intermediate scroll and typing frames
-READ = 1050  # frames carrying information
-BEAT = 550  # transitions
+GLIDE = 150  # intermediate scroll and typing frames
+READ = 900  # frames carrying information
+BEAT = 450  # transitions
 
 
 def _reset_decisions() -> None:
@@ -82,7 +83,29 @@ def record(url: str, out: Path, width: int = 1180, height: int = 840) -> None:
                 page.wait_for_timeout(260)
                 shot(page, GLIDE)
 
-        # --- the queue, 99 pending
+        # --- ask a live question, with a typo in it.
+        # The typo is the point: the model answers it confidently either way,
+        # and the checker is what makes the guess visible.
+        ask = page.get_by_role("textbox", name="Ask a question").first
+        ask.click()
+        for chunk in ("What is the ", "alignmnt of ", "the Hulk?"):
+            ask.press_sequentially(chunk, delay=26)
+            shot(page, GLIDE + 140)
+        shot(page, BEAT)
+
+        page.get_by_role("button", name="Ask").first.click()
+        page.wait_for_timeout(1500)
+        shot(page, BEAT)
+        # generation runs on a local model; wait for the verdict to appear
+        page.get_by_text("Possible typo", exact=False).first.wait_for(timeout=180_000)
+        page.wait_for_timeout(1200)
+        shot(page, READ + 900)  # "alignmnt -> alignment"
+        glide(320)
+        shot(page, READ + 500)  # the answer and the plain-English description
+
+        # --- over to the review queue
+        page.get_by_role("tab", name="Review queue", exact=False).first.click()
+        page.wait_for_timeout(2200)
         shot(page, READ)
 
         # --- filter the queue with the confidence slider.

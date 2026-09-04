@@ -69,6 +69,10 @@ POST /review/{id}    → approve | edit | reject
 GET  /health
 ```
 
+The Streamlit app exposes the same pipeline interactively: ask a question, see
+the answer with its confidence and a plain-English description, or work the
+review queue.
+
 ## 4. Stack
 
 Python 3.11+, `uv`. LLM behind a thin `LLMClient` interface so at least two

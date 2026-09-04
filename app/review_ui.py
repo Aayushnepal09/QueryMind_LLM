@@ -35,6 +35,8 @@ import theme
 
 from sqlsentinel.executor import bird_executor
 from sqlsentinel.explain import describe_confidence, explain
+from sqlsentinel.question import check as check_question
+from sqlsentinel.schema_linker import bird_schema
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 QUEUE_FILE = REPO_ROOT / "results" / "review_queue.json"
@@ -119,6 +121,153 @@ def run_preview(db_id: str, sql: str):
     return pd.DataFrame(res.rows, columns=cols), None
 
 
+# ---------------------------------------------------------------- ask
+
+
+@st.cache_data(show_spinner=False)
+def available_databases() -> list[str]:
+    if not DB_ROOT.exists():
+        return []
+    return sorted(p.stem for p in DB_ROOT.glob("*/*.sqlite"))
+
+
+@st.cache_resource(show_spinner=False)
+def get_agent(k: int):
+    """One agent per k, held across reruns.
+
+    Streamlit re-executes the script on every interaction; rebuilding the client
+    and its response cache each time would discard the cache that makes repeat
+    questions instant.
+    """
+    from sqlsentinel.agent import Agent
+    from sqlsentinel.llm import get_client
+
+    return Agent(client=get_client(), db_root=DB_ROOT, k=k)
+
+
+def ask_question(question: str, db_id: str, k: int) -> dict:
+    """Answer a live question and score it the same way the queue was scored."""
+    from sqlsentinel.confidence import agreement_confidence, extract_features
+    from sqlsentinel.router import Decision, Router
+
+    agent = get_agent(k)
+    trace = agent.predict_one(
+        {"question_id": -1, "db_id": db_id, "question": question, "evidence": ""}
+    )
+    if trace.error:
+        return {"error": trace.error}
+
+    schema = bird_schema(str(DB_ROOT), db_id)
+    feats = extract_features(trace, question, "", len(schema.tables))
+    confidence = agreement_confidence(feats)
+    decision = Router(threshold=0.7).route(
+        trace.sql,
+        confidence,
+        row_count=trace.result_row_count,
+        executed_ok=trace.executed_ok,
+        n_tables=len(schema.tables),
+    )
+    return {
+        "sql": trace.sql,
+        "confidence": confidence,
+        "n_candidates": trace.n_candidates,
+        "executed_ok": trace.executed_ok,
+        "review": decision.decision is Decision.REVIEW,
+        "reasons": decision.reasons,
+        "latency_s": trace.latency_s,
+        "db_id": db_id,
+    }
+
+
+def render_ask() -> None:
+    dbs = available_databases()
+    if not dbs:
+        st.info("Benchmark databases not present, so live questions cannot be answered.")
+        return
+
+    s1, s2 = st.columns([1, 3], vertical_alignment="bottom")
+    with s1:
+        db_id = st.selectbox(
+            "Database", dbs, index=dbs.index("superhero") if "superhero" in dbs else 0
+        )
+    with s2:
+        k = st.select_slider(
+            "Attempts (more attempts give a better confidence estimate, and take longer)",
+            options=[1, 3, 5],
+            value=3,
+        )
+
+    # A form so Enter submits. Without one, Enter triggers a rerun in which the
+    # button is False, so the question is silently dropped and the field clears
+    # -- it looks like the app ignored you.
+    with st.form("ask_form", border=False):
+        f1, f2 = st.columns([4, 1], vertical_alignment="bottom")
+        with f1:
+            question = st.text_input(
+                "Ask a question",
+                placeholder="e.g. How many schools are in Alameda county?",
+                key="ask_q",
+            )
+        with f2:
+            go = st.form_submit_button("Ask", type="primary", use_container_width=True)
+
+    if not (go and question.strip()):
+        return
+
+    question = question.strip()
+
+    # Show what the database does and does not recognise *before* the answer.
+    # A typo does not stop the model producing confident SQL -- it silently
+    # guesses, and the user has no way to see a guess was made.
+    review = check_question(question, bird_schema(str(DB_ROOT), db_id))
+    if review.likely_typos:
+        fixes = ", ".join(f"**{s.word}** → **{s.suggestion}**" for s in review.likely_typos)
+        st.warning(f"Possible typo: {fixes}", icon="✏️")
+        st.caption(f"Reading it as: *{review.corrected()}*")
+        st.caption("Edit the question above and ask again if that is what you meant.")
+    if review.unrecognised:
+        words = ", ".join(f"**{s.word}**" for s in review.unrecognised)
+        st.info(
+            f"The `{db_id}` database has no table or column matching {words}. "
+            f"The answer below is the model's best guess at what you meant.",
+            icon="🔎",
+        )
+
+    with st.spinner(f"Generating {k} candidate quer{'y' if k == 1 else 'ies'}..."):
+        try:
+            res = ask_question(question.strip(), db_id, k)
+        except Exception as e:
+            st.error(f"Could not answer that: {e}")
+            st.caption("Is Ollama running? `ollama serve`, then `ollama pull qwen2.5-coder:7b`.")
+            return
+
+    if res.get("error"):
+        st.error(res["error"])
+        return
+
+    st.divider()
+    conf = res["confidence"]
+    st.markdown(f'{theme.pill(conf)}<div class="question">{question}</div>', unsafe_allow_html=True)
+    st.info(describe_confidence(conf, res["n_candidates"]), icon="🎯")
+
+    if res["review"]:
+        st.warning(
+            "In production this answer would be **held for human review** rather than "
+            "returned: " + "; ".join(res["reasons"]),
+            icon="🛡️",
+        )
+
+    st.markdown('<div class="label">The answer</div>', unsafe_allow_html=True)
+    render_answer({"db_id": res["db_id"]}, res["sql"])
+
+    st.markdown('<div class="label">What this query does</div>', unsafe_allow_html=True)
+    render_plain(res["sql"])
+
+    with st.expander("Show the database query"):
+        st.code(res["sql"] or "(no query produced)", language="sql")
+        st.caption(f"generated in {res['latency_s']:.1f}s across {res['n_candidates']} attempt(s)")
+
+
 # ---------------------------------------------------------------- views
 
 
@@ -181,14 +330,21 @@ def main() -> None:
     theme.inject()
     theme.header(
         "SQLSentinel",
-        "Questions the system was unsure about. Each needs a person to confirm the answer.",
+        "Ask a question, or review the ones the system was unsure about.",
     )
 
+    ask_tab, queue_tab = st.tabs(["Ask a question", f"Review queue ({len(queue)})"])
+    with ask_tab:
+        render_ask()
+    with queue_tab:
+        render_queue(conn, queue)
+
+
+def render_queue(conn, queue: list[dict]) -> None:
     if not queue:
         st.info(
             "No review queue found. Generate one with:\n\n"
-            "```\nuv run python -m sqlsentinel.eval --split dev_50 "
-            "--predictor agent --k 3 --write-queue\n```"
+            "```\nuv run python scripts/build_queue.py results/traces/k3-eval200.json\n```"
         )
         return
 
