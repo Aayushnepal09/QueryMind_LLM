@@ -61,6 +61,17 @@ def _stratified_sample(records: list[dict], n: int, rng: random.Random) -> list[
 def build_splits(dev_json: Path) -> dict[str, list[int]]:
     records = json.loads(dev_json.read_text(encoding="utf-8"))
 
+    # The split sizes are fixed constants, so a dataset smaller than they assume
+    # cannot produce them. Say so plainly: the alternative is a bare
+    # AssertionError several frames deep that reads like a bug in the sampler.
+    if len(records) < EVAL_N + DEV_N:
+        raise ValueError(
+            f"{dev_json} holds {len(records)} questions, but the committed splits "
+            f"need at least {EVAL_N + DEV_N} (eval_500 plus a calibration "
+            f"remainder). This usually means the BIRD dev set is truncated or the "
+            f"wrong file was passed."
+        )
+
     rng = random.Random(SEED)
     eval_ids = _stratified_sample(records, EVAL_N, rng)
 

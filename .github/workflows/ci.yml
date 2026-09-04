@@ -22,13 +22,13 @@ jobs:
           enable-cache: true
 
       - name: Install
-        run: uv sync --extra dev
+        run: uv sync --extra dev --extra mcp
 
       - name: Lint
-        run: uv run ruff check src tests scripts
+        run: uv run ruff check src tests scripts app
 
       - name: Format check
-        run: uv run ruff format --check src tests scripts
+        run: uv run ruff format --check src tests scripts app
 
       # The BIRD databases are 1.4 GB and gitignored, so tests that need them
       # skip themselves here. Everything that does not -- extraction, caching,
