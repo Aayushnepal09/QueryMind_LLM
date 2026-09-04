@@ -3,7 +3,7 @@
 [![CI](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-296%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-298%20passing-brightgreen)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](pyproject.toml)
 
 **A text-to-SQL agent that knows when it's wrong.**
@@ -423,7 +423,7 @@ app/review_ui.py       Streamlit review queue
 scripts/               experiment sweep, analysis, report generation
 third_party/           BIRD's official scorer, wrapped not reimplemented
 results/               committed metrics, figures, splits, traces
-tests/                 296 tests, 92% coverage
+tests/                 298 tests, 92% coverage
 ```
 
 ## Documentation

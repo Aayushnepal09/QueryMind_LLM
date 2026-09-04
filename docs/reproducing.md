@@ -180,7 +180,7 @@ Cloned to an empty directory and installed from scratch:
 | Check | Result |
 |---|---|
 | `uv sync --extra dev` | clean install |
-| `uv run pytest` | **294 passed, 2 skipped** — the skips need the BIRD databases and self-skip when absent |
+| `uv run pytest` | **296 passed, 2 skipped** — the skips need the BIRD databases and self-skip when absent |
 | `uv run ruff check` / `ruff format --check` | clean |
 | `uv run sqlsentinel-eval --help` | works |
 | Running the eval without BIRD present | fails with an actionable message pointing here |
