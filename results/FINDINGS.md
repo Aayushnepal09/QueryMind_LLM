@@ -279,3 +279,87 @@ recompute from scratch.
 - **Per-database and per-difficulty slices are small.** Where a bucket is under
   ~30 questions it is flagged inline. The `n=500` results (§1, §4, §5) are the
   ones to lean on.
+
+---
+
+## 9. Most of the confidence model's features do nothing, and one is harmful
+
+The scorer uses 14 features. Fitting on `calib` (n=200) and scoring on the
+disjoint `eval_500` slice (n=200), leave-one-out tells a blunt story.
+
+**Removing these hurts** (positive = model gets worse without it):
+
+| Feature | ΔBrier when removed |
+|---|---:|
+| `agreement_rate` | **+0.0224** |
+| `result_empty` | **+0.0170** |
+| `has_aggregation` | +0.0080 |
+| `sql_length` | +0.0036 |
+
+**Removing these helps** (negative = the feature was making the model worse):
+
+| Feature | ΔBrier when removed |
+|---|---:|
+| `question_length` | **−0.0061** |
+| `n_correction_rounds` | −0.0029 |
+| `n_joins` | −0.0021 |
+| `evidence_provided` | −0.0021 |
+| `execution_errored` | −0.0008 |
+| `schema_coverage` | −0.0004 |
+
+### The one that surprised me: question length
+
+§5 of this document reports question length as one of the most statistically
+solid results here — r = −0.224, p < 0.0001, accuracy falling 61% → 14% across
+buckets. I described it as "the cheapest available prior on whether an answer
+will be trustworthy."
+
+**It is the single most harmful feature in the multivariate model.** Dropping it
+improves Brier from 0.1943 to 0.1882.
+
+Both results are correct, and the tension between them is the point. Question
+length genuinely predicts failure *on its own*. But whatever it captures —
+question complexity — is already captured better by the agreement rate, because
+a complex question is one the model samples inconsistently on. Once agreement is
+in the model, length contributes variance rather than signal. **A strong
+univariate predictor is not automatically a useful feature.**
+
+### A redundancy bug in my own feature set
+
+`has_subquery` and `has_nested_select` correlate at **r = 1.0000** on this data —
+they are the same feature computed two ways (`(SELECT` versus counting the
+occurrences of `SELECT`). Their single-feature Brier and ECE are identical to
+four decimal places. One of them is dead weight, and it went unnoticed until
+this ablation because nothing in the pipeline checks for collinearity.
+
+### What a smaller model does
+
+| Feature set | Brier ↓ | ECE ↓ | n features |
+|---|---:|---:|---:|
+| agreement only | 0.2186 | 0.0756 | 1 |
+| agreement + `result_empty` | 0.1939 | 0.0707 | 2 |
+| + `has_aggregation` | 0.1843 | 0.0734 | 3 |
+| **+ `sql_length`** | **0.1770** | 0.0643 | **4** |
+| all 14 (shipped) | 0.1943 | **0.0507** | 14 |
+
+Agreement alone is meaningfully worse than the full model, so the query-structure
+features are earning their place — but four of them appear to do the work of
+fourteen.
+
+### ⚠️ Why the 4-feature model was NOT shipped
+
+**That table was produced by choosing feature sets and reading their scores on
+the evaluation split.** Selecting a model that way is a form of fitting to the
+test set, and the 0.1770 is therefore optimistic by an unknown amount. It is
+exactly the class of mistake this project exists to avoid, and reporting it as
+"the better model" would undercut everything else here.
+
+Confirming it honestly needs a third split held out from both fitting and
+selection. That has not been done, so **the shipped scorer remains the 14-feature
+model**, whose 0.1943 / 0.0507 were measured on data untouched by any selection
+decision.
+
+This section is therefore a *diagnostic*, not a result: it says the feature set
+is probably larger than it needs to be, and names the collinear pair and the
+harmful feature as concrete leads. Acting on it is future work with a proper
+split, not a number to quote.
