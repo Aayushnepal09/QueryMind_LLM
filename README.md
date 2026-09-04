@@ -357,7 +357,7 @@ app/review_ui.py       Streamlit review queue
 scripts/               experiment sweep, analysis, report generation
 third_party/           BIRD's official scorer, wrapped not reimplemented
 results/               committed metrics, figures, splits, traces
-tests/                 152 tests
+tests/                 264 tests, 92% coverage
 ```
 
 ## Documentation
@@ -369,4 +369,5 @@ tests/                 152 tests
 | [docs/reproducing.md](docs/reproducing.md) | Fresh clone → scored number |
 | [docs/migration-notes.md](docs/migration-notes.md) | QueryMind audit |
 | [docs/failure-taxonomy.md](docs/failure-taxonomy.md) | Failure categories |
+| [docs/resume-bullets.md](docs/resume-bullets.md) | Claims with their sources |
 | [CLAUDE.md](CLAUDE.md) | Project specification |
