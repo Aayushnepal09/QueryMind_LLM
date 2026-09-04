@@ -21,20 +21,18 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS = REPO_ROOT / "results"
 
-# (caption, milliseconds to hold) — longer on the frames that carry meaning.
+# Milliseconds each frame is held.
 #
 # Held via per-frame duration rather than by repeating identical frames:
 # Pillow's optimize pass collapses consecutive duplicates, so repetition
-# silently produces a 6-frame GIF that flashes past.
-STEPS = [
-    ("the queue", 3000),
-    ("open a flagged query", 2200),
-    ("confidence in words, not a number", 3200),
-    ("the answer it would return", 3800),
-    ("what the query does, in plain English", 3400),
-    ("approve, reject, or unsure", 2800),
-    ("engineers get the same queue with SQL", 3800),
-]
+# silently produces a handful of frames that flash past.
+#
+# Two speeds. Scroll steps are short so movement reads as motion rather than as
+# jumps; the frames a viewer needs to actually read are held long enough to
+# read. An earlier cut used 3-5s uniformly, which was both slow and jerky.
+GLIDE = 200  # intermediate scroll frames
+READ = 1250  # frames carrying information
+BEAT = 650  # transitions
 
 
 def record(url: str, out: Path, width: int = 1180, height: int = 840) -> None:
@@ -53,46 +51,51 @@ def record(url: str, out: Path, width: int = 1180, height: int = 840) -> None:
         page.goto(url, wait_until="networkidle")
         page.wait_for_timeout(3500)
 
-        # 1: the queue
-        shot(page, STEPS[0][1])
+        def glide(px: int, steps: int = 3) -> None:
+            """Scroll in small increments, capturing each, so it reads as motion."""
+            for _ in range(steps):
+                page.mouse.wheel(0, px // steps)
+                page.wait_for_timeout(260)
+                shot(page, GLIDE)
 
-        # 2: open an item with a result worth looking at
+        # the queue
+        shot(page, READ)
+
+        # open a flagged query
         target = page.get_by_text("How strong is the Hulk?", exact=False).first
         target.scroll_into_view_if_needed()
         page.wait_for_timeout(400)
-        shot(page, STEPS[1][1])
+        shot(page, BEAT)
         target.click()
-        page.wait_for_timeout(2500)
+        page.wait_for_timeout(2200)
+        shot(page, BEAT)
 
-        # 3: question + confidence in words
-        page.mouse.wheel(0, 320)
-        page.wait_for_timeout(900)
-        shot(page, STEPS[2][1])
+        # confidence in words
+        glide(320)
+        shot(page, READ)
 
-        # 4: the answer table
-        page.mouse.wheel(0, 300)
-        page.wait_for_timeout(900)
-        shot(page, STEPS[3][1])
+        # the answer it would return
+        glide(300)
+        shot(page, READ + 400)
 
-        # 5: plain-English description
-        page.mouse.wheel(0, 300)
-        page.wait_for_timeout(900)
-        shot(page, STEPS[4][1])
+        # what the query does
+        glide(300)
+        shot(page, READ)
 
-        # 6: the decision controls
-        page.mouse.wheel(0, 320)
-        page.wait_for_timeout(900)
-        shot(page, STEPS[5][1])
+        # the decision controls
+        glide(320)
+        shot(page, READ)
 
-        # 7: engineer mode. Scroll back to the item first, then down just far
-        # enough to frame the SQL editor rather than past it to the buttons.
+        # engineer mode: scroll back to the item, then just far enough to frame
+        # the SQL editor rather than past it to the buttons
         page.get_by_text("Engineer (SQL)", exact=False).first.click()
-        page.wait_for_timeout(3000)
+        page.wait_for_timeout(2600)
         page.get_by_text("How strong is the Hulk?", exact=False).first.scroll_into_view_if_needed()
         page.wait_for_timeout(600)
+        shot(page, BEAT)
         page.mouse.wheel(0, 260)
-        page.wait_for_timeout(1000)
-        shot(page, STEPS[6][1])
+        page.wait_for_timeout(900)
+        shot(page, READ + 600)
 
         browser.close()
 
@@ -115,7 +118,7 @@ def _assemble(frames: list[bytes], holds: list[int], out: Path) -> None:
         optimize=True,
     )
     size_mb = out.stat().st_size / 1024 / 1024
-    print(f"wrote {out}  ({len(images)} frames, {size_mb:.2f} MB)")
+    print(f"wrote {out}  ({len(images)} frames, {sum(holds) / 1000:.1f}s, {size_mb:.2f} MB)")
     if size_mb > 10:
         print("  warning: over 10 MB — GitHub will not render this inline")
 

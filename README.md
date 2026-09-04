@@ -28,6 +28,15 @@ NL question ──► Schema Linker ──► SQL Generator ──► Self-Corre
                                     auto-execute                       human review queue
 ```
 
+![Review UI](results/review-ui-demo.gif)
+
+When the agent is unsure, the query goes to a person — and the queue is built so
+a **non-engineer** can action it: the question, its confidence *in words*
+("all 3 attempts produced different answers"), the answer it would return, and a
+plain-English description of the query, with the SQL one click away. Engineers
+get the same queue with the SQL first and an editor. Both act on the same items
+and log decisions identically.
+
 Every step emits OpenTelemetry spans. Every eval run logs to MLflow. A CI gate
 fails the build when execution accuracy regresses — when the benchmark data and
 an API key are available to it; otherwise it reports what it is missing and
@@ -261,18 +270,8 @@ and `ConfidenceModel.fit()` raises if they ever overlap. The service loads the
 fitted model at startup and reports which scorer produced each number, so a
 caller can tell a calibrated probability from a raw agreement ratio.
 
-### The review queue
-
-![Review UI](results/review-ui-demo.gif)
-
-A query reaching the queue is shown to a **non-engineer** as: the question, its
-confidence *in words* ("all 3 attempts produced different answers"), the answer
-it would return, and a plain-English description of what the query does — with
-the SQL one click away. Engineers get the same queue with the SQL first and an
-editor. Both act on the same items and their decisions log identically, which is
-what makes the human-in-the-loop claim more than decoration.
-
-Re-record after a UI change with `uv run python scripts/record_demo.py`.
+The review queue is shown at the top of this README; re-record it after a UI
+change with `uv run python scripts/record_demo.py`.
 
 **Risk overrides are not probabilistic.** Independent of confidence, these force
 review: any non-`SELECT` statement, a failed execution, an oversized result set,
