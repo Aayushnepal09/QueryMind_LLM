@@ -150,3 +150,55 @@ def test_empty_question_rejected_by_validation(monkeypatch, tmp_path, db_root):
 def test_k_is_bounded(monkeypatch, tmp_path, db_root):
     c = make_client(monkeypatch, tmp_path, db_root, "SELECT 1")
     assert c.post("/query", json={"question": "q", "db_id": "shop", "k": 99}).status_code == 422
+
+
+# ---------------------------------------------------------------- scorer selection
+
+
+def test_health_reports_which_scorer_is_active(monkeypatch, tmp_path, db_root):
+    c = make_client(monkeypatch, tmp_path, db_root, "SELECT 1")
+    assert c.get("/health").json()["scorer"] == "agreement"
+
+
+def test_query_reports_the_scorer_it_used(monkeypatch, tmp_path, db_root):
+    c = make_client(monkeypatch, tmp_path, db_root, "SELECT COUNT(*) FROM items")
+    body = c.post("/query", json={"question": "q", "db_id": "shop", "k": 1}).json()
+    assert body["scorer"] == "agreement"
+
+
+def test_calibrated_model_is_used_when_present(monkeypatch, tmp_path, db_root):
+    """A trained scorer must actually reach production, not just results/."""
+    import numpy as np
+
+    from sqlsentinel.confidence import ConfidenceModel, QueryFeatures
+
+    rng = np.random.default_rng(0)
+    feats, correct = [], []
+    for _ in range(120):
+        a = rng.uniform(0, 1)
+        feats.append(QueryFeatures(agreement_rate=a))
+        correct.append(int(rng.uniform() < a))
+    ConfidenceModel().fit(feats, correct, question_ids=list(range(120))).save(
+        tmp_path / "model.pkl"
+    )
+
+    monkeypatch.setenv("CONFIDENCE_MODEL", str(tmp_path / "model.pkl"))
+    c = make_client(monkeypatch, tmp_path, db_root, "SELECT COUNT(*) FROM items")
+    api_module._state["confidence_model"] = api_module._load_confidence_model()
+
+    body = c.post("/query", json={"question": "q", "db_id": "shop", "k": 1}).json()
+    assert body["scorer"] == "calibrated"
+    assert 0.0 <= body["confidence"] <= 1.0
+
+
+def test_unreadable_model_falls_back_rather_than_failing(monkeypatch, tmp_path):
+    """A corrupt model file must not take the service down."""
+    bad = tmp_path / "bad.pkl"
+    bad.write_text("not a pickle", encoding="utf-8")
+    monkeypatch.setenv("CONFIDENCE_MODEL", str(bad))
+    assert api_module._load_confidence_model() is None
+
+
+def test_missing_model_falls_back_to_agreement(monkeypatch, tmp_path):
+    monkeypatch.setenv("CONFIDENCE_MODEL", str(tmp_path / "nope.pkl"))
+    assert api_module._load_confidence_model() is None

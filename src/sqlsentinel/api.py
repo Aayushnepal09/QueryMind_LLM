@@ -26,7 +26,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from sqlsentinel.agent import Agent
-from sqlsentinel.confidence import agreement_confidence, extract_features
+from sqlsentinel.confidence import ConfidenceModel, agreement_confidence, extract_features
 from sqlsentinel.executor import bird_executor
 from sqlsentinel.llm import get_client
 from sqlsentinel.router import Decision, Router
@@ -56,6 +56,7 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     sql: str
     confidence: float
+    scorer: Literal["calibrated", "agreement"] = "agreement"
     decision: Literal["AUTO", "REVIEW"]
     reasons: list[str] = []
     columns: list[str] | None = None
@@ -97,9 +98,28 @@ class Health(BaseModel):
     model: str
     databases: int
     threshold: float
+    scorer: Literal["calibrated", "agreement"]
 
 
 # ---------------------------------------------------------------- app
+
+
+def _load_confidence_model() -> ConfidenceModel | None:
+    """Load the calibrated scorer if one has been trained.
+
+    Falls back to the raw agreement rate when absent. That fallback is not just
+    convenience: the calibrated model is fitted on a specific agent
+    configuration, and silently applying it to a different one would produce
+    confident-looking numbers with no basis. Serving v1 and saying so is the
+    honest default.
+    """
+    path = Path(os.getenv("CONFIDENCE_MODEL", REPO_ROOT / "results" / "confidence-model.pkl"))
+    if not path.exists():
+        return None
+    try:
+        return ConfidenceModel.load(path)
+    except Exception:
+        return None
 
 
 @asynccontextmanager
@@ -108,6 +128,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001 - required by FastAPI
     _state["agent"] = Agent(client=client, db_root=DB_ROOT, k=3)
     _state["router"] = Router(threshold=float(os.getenv("ROUTING_THRESHOLD", "0.5")))
     _state["tracer"] = get_tracer()
+    _state["confidence_model"] = _load_confidence_model()
     yield
     _state.clear()
 
@@ -130,6 +151,7 @@ def health() -> Health:
         model=agent.client.model,
         databases=n,
         threshold=_state["router"].threshold,
+        scorer="calibrated" if _state.get("confidence_model") else "agreement",
     )
 
 
@@ -160,7 +182,14 @@ def query(req: QueryRequest) -> QueryResponse:
 
         schema = bird_schema(str(DB_ROOT), req.db_id)
         feats = extract_features(trace, req.question, req.evidence, len(schema.tables))
-        confidence = agreement_confidence(feats)
+
+        model: ConfidenceModel | None = _state.get("confidence_model")
+        if model is not None:
+            confidence = model.predict(feats)
+            scorer = "calibrated"
+        else:
+            confidence = agreement_confidence(feats)
+            scorer = "agreement"
 
         decision = router.route(
             trace.sql,
@@ -173,6 +202,7 @@ def query(req: QueryRequest) -> QueryResponse:
     resp = QueryResponse(
         sql=trace.sql,
         confidence=round(confidence, 4),
+        scorer=scorer,
         decision=decision.decision.value,
         reasons=decision.reasons,
         trace_id=trace_id,
