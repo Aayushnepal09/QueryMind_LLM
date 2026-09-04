@@ -275,36 +275,116 @@ def _plots(label, conf, correct, curve) -> None:
     except ImportError:
         return
 
-    from sqlsentinel.confidence import reliability_curve
+    from sqlsentinel.confidence import brier_score, expected_calibration_error, reliability_curve
 
+    accent, muted = "#2563eb", "#94a3b8"
+
+    # ---- reliability diagram
     rc = reliability_curve(conf, correct)
-    fig, ax = plt.subplots(figsize=(5, 5))
-    ax.plot([0, 1], [0, 1], "--", color="grey", label="perfect calibration")
+    fig, ax = plt.subplots(figsize=(5.4, 5.4))
+    ax.plot([0, 1], [0, 1], "--", color=muted, lw=1.3, label="perfect calibration", zorder=1)
+
     if rc:
-        ax.plot(
-            [b["mean_predicted"] for b in rc],
-            [b["observed_accuracy"] for b in rc],
-            "o-",
-            label="observed",
+        xs = [b["mean_predicted"] for b in rc]
+        ys = [b["observed_accuracy"] for b in rc]
+        # shading between the curve and the diagonal makes the *direction* of
+        # miscalibration readable at a glance: below means overconfident
+        ax.fill_between(xs, ys, xs, color=accent, alpha=0.12, zorder=2)
+        # marker area encodes bin population, so sparse bins cannot be mistaken
+        # for equally well-evidenced ones
+        counts = [b["count"] for b in rc]
+        scale = max(counts) or 1
+        ax.scatter(
+            xs,
+            ys,
+            s=[40 + 320 * c / scale for c in counts],
+            color=accent,
+            alpha=0.85,
+            zorder=4,
+            edgecolors="white",
+            linewidths=1.2,
         )
+        ax.plot(xs, ys, "-", color=accent, lw=2, zorder=3, label="observed")
+        for x, y, c in zip(xs, ys, counts, strict=True):
+            ax.annotate(
+                f"n={c}",
+                (x, y),
+                textcoords="offset points",
+                xytext=(9, -13),
+                fontsize=8,
+                color="#475569",
+            )
+
+    ax.set_xlim(-0.04, 1.04)
+    ax.set_ylim(-0.04, 1.04)
     ax.set_xlabel("predicted confidence")
     ax.set_ylabel("observed accuracy")
-    ax.set_title(f"Reliability — {label}")
-    ax.legend()
+    ax.set_title(
+        f"Reliability — {label}\n"
+        f"Brier {brier_score(conf, correct):.3f} · "
+        f"ECE {expected_calibration_error(conf, correct):.3f} · n={len(correct)}",
+        fontsize=11,
+    )
+    ax.grid(alpha=0.25, lw=0.6)
+    ax.set_axisbelow(True)
+    ax.legend(frameon=False, fontsize=9, loc="upper left")
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
     fig.tight_layout()
-    fig.savefig(RESULTS / f"calibration-{label}.png", dpi=140)
+    fig.savefig(RESULTS / f"calibration-{label}.png", dpi=150)
     plt.close(fig)
 
-    fig, ax = plt.subplots(figsize=(6, 4.5))
-    ax.plot([r["pct_routed"] for r in curve], [r["pct_errors_caught"] for r in curve], "o-")
-    ax.plot([0, 100], [0, 100], "--", color="grey", label="random routing")
-    ax.set_xlabel("% of queries routed to review")
+    # ---- routing curve
+    fig, ax = plt.subplots(figsize=(6.4, 4.8))
+    xs = [r["pct_routed"] for r in curve]
+    ys = [r["pct_errors_caught"] for r in curve]
+
+    # anything above the diagonal beats routing at random
+    ax.fill_between(
+        xs,
+        ys,
+        xs,
+        where=[y >= x for x, y in zip(xs, ys, strict=True)],
+        color=accent,
+        alpha=0.12,
+        label="better than random",
+    )
+    ax.plot([0, 100], [0, 100], "--", color=muted, lw=1.3, label="random routing")
+    ax.plot(xs, ys, "o-", color=accent, lw=2, ms=5)
+
+    pt = best_operating_point(curve, max_pct_routed=25.0)
+    if pt:
+        ax.scatter(
+            [pt["pct_routed"]],
+            [pt["pct_errors_caught"]],
+            s=180,
+            facecolor="none",
+            edgecolor="#dc2626",
+            lw=2,
+            zorder=5,
+        )
+        ax.annotate(
+            f"routed {pt['pct_routed']:.0f}% → caught {pt['pct_errors_caught']:.0f}%\n"
+            f"auto-executed accuracy {pt['auto_accuracy']:.0f}%",
+            (pt["pct_routed"], pt["pct_errors_caught"]),
+            textcoords="offset points",
+            xytext=(14, -32),
+            fontsize=9,
+            color="#dc2626",
+        )
+
+    ax.set_xlim(-2, 102)
+    ax.set_ylim(-2, 102)
+    ax.set_xlabel("% of queries routed to human review")
     ax.set_ylabel("% of incorrect queries caught")
-    ax.set_title(f"Routing — {label}")
-    ax.legend()
-    ax.grid(alpha=0.3)
+    ax.set_title(f"Routing — {label}", fontsize=11)
+    ax.grid(alpha=0.25, lw=0.6)
+    ax.set_axisbelow(True)
+    ax.legend(frameon=False, fontsize=9, loc="lower right")
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
     fig.tight_layout()
-    fig.savefig(RESULTS / f"routing-{label}.png", dpi=140)
+    fig.savefig(RESULTS / f"routing-{label}.png", dpi=150)
     plt.close(fig)
 
 
