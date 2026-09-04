@@ -63,7 +63,7 @@ def load_traces(tag: str) -> list[TraceShim]:
 # ---------------------------------------------------------------- findings
 
 
-def finding_silent_failures(harness, tag: str, labels: dict[int, int]) -> dict:
+def finding_silent_failures(tag: str, labels: dict[int, int]) -> dict:
     """How many wrong answers look like right ones?
 
     A wrong query that raises an error announces itself. A wrong query that
@@ -369,12 +369,8 @@ def main() -> None:
     base_labels = load_labels(harness, "baseline-eval500")
     final_labels = load_labels(harness, "final-eval500")
 
-    findings["silent_failures_baseline"] = finding_silent_failures(
-        harness, "baseline-eval500", base_labels
-    )
-    findings["silent_failures_final"] = finding_silent_failures(
-        harness, "final-eval500", final_labels
-    )
+    findings["silent_failures_baseline"] = finding_silent_failures("baseline-eval500", base_labels)
+    findings["silent_failures_final"] = finding_silent_failures("final-eval500", final_labels)
     findings["per_database"] = finding_per_database(harness, "baseline-eval500", base_labels)
     findings["schema_size_correlation"] = finding_schema_size_correlation(findings["per_database"])
     findings["evidence_by_difficulty"] = finding_evidence_by_difficulty(harness)

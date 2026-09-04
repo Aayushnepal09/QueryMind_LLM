@@ -63,7 +63,7 @@ def test_sample_index_is_part_of_the_key(cache):
         {"sample_index": 3},
     ],
 )
-def test_every_key_component_changes_the_key(cache, kwargs):
+def test_every_key_component_changes_the_key(kwargs):
     base = {"system": "sys", "user": "user", "temperature": 0.0, "sample_index": 0}
     k1 = ResponseCache.key("p", "m", **base)
     k2 = ResponseCache.key("p", "m", **{**base, **kwargs})

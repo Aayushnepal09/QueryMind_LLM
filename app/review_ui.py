@@ -130,7 +130,7 @@ def render_answer(item: dict, sql: str) -> None:
         st.caption(f"Showing the first 25 of {len(df):,}.")
 
 
-def render_plain(item: dict, sql: str) -> None:
+def render_plain(sql: str) -> None:
     exp = explain(sql)
     rows = "".join(f'<div class="plain-item">{d}</div>' for d in exp.details)
     st.markdown(
@@ -244,7 +244,7 @@ def main() -> None:
                 st.markdown('<div class="label">Result</div>', unsafe_allow_html=True)
                 render_answer(item, sql)
                 with st.expander("Plain-English description"):
-                    render_plain(item, sql)
+                    render_plain(sql)
             else:
                 st.markdown(
                     '<div class="label">The answer the system found</div>',
@@ -252,7 +252,7 @@ def main() -> None:
                 )
                 render_answer(item, item.get("sql", ""))
                 st.markdown('<div class="label">What this query does</div>', unsafe_allow_html=True)
-                render_plain(item, item.get("sql", ""))
+                render_plain(item.get("sql", ""))
                 with st.expander("Show the database query (for engineers)"):
                     st.code(item.get("sql", ""), language="sql")
                 sql = item.get("sql", "")

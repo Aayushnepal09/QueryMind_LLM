@@ -103,7 +103,7 @@ class Health(BaseModel):
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # noqa: ARG001 - required by FastAPI
     client = get_client()
     _state["agent"] = Agent(client=client, db_root=DB_ROOT, k=3)
     _state["router"] = Router(threshold=float(os.getenv("ROUTING_THRESHOLD", "0.5")))
