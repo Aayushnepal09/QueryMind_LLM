@@ -67,19 +67,34 @@ class ExemplarStore:
     def _matrix(self):
         return self._vectorizer.transform([r["question"] for r in self.records])
 
-    def retrieve(self, question: str, k: int = 3, db_id: str | None = None) -> list[Exemplar]:
+    def retrieve(
+        self,
+        question: str,
+        k: int = 3,
+        db_id: str | None = None,
+        exclude_question_id: int | None = None,
+    ) -> list[Exemplar]:
         """Top-k most similar calibration questions.
 
         `same_db_only` restricts to the target database. That trades away
         coverage (some BIRD databases hold few calibration questions) for
         exemplars whose table and column names actually appear in the target
         schema. Which wins is measured, not assumed.
+
+        `exclude_question_id` drops the query's own record from the pool.
+        **This is a leakage guard, not a nicety.** Scoring a question that is
+        itself in the exemplar pool retrieves it at similarity 1.0 and hands the
+        model its own gold SQL: measured at +23.5 points of pure contamination
+        on the calibration split before this was added.
         """
         idx = range(len(self.records))
         if self.same_db_only and db_id:
             idx = [i for i in idx if self.records[i]["db_id"] == db_id]
             if not idx:
                 idx = range(len(self.records))
+
+        if exclude_question_id is not None:
+            idx = [i for i in idx if self.records[i]["question_id"] != exclude_question_id]
 
         sims = cosine_similarity(self._vectorizer.transform([question]), self._matrix)[0]
         ranked = sorted(idx, key=lambda i: sims[i], reverse=True)[:k]

@@ -93,7 +93,11 @@ class Agent:
 
             prefix = ""
             if self.few_shot:
-                ex = self.exemplars.retrieve(q["question"], k=self.few_shot, db_id=q["db_id"])
+                ex = self.exemplars.retrieve(
+                    q["question"], k=self.few_shot, db_id=q["db_id"],
+                    # never retrieve the question being answered
+                    exclude_question_id=q["question_id"],
+                )
                 prefix = render_exemplars(ex)
                 t.exemplar_similarity = max((e.similarity for e in ex), default=0.0)
 
