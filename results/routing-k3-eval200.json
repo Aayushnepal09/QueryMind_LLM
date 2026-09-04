@@ -11,192 +11,192 @@
     },
     {
       "threshold": 0.05,
-      "pct_routed": 6.5,
-      "pct_errors_caught": 13.333333333333334,
-      "n_routed": 13,
-      "errors_caught": 12,
-      "auto_accuracy": 58.288770053475936,
-      "n_auto": 187
+      "pct_routed": 8.5,
+      "pct_errors_caught": 17.77777777777778,
+      "n_routed": 17,
+      "errors_caught": 16,
+      "auto_accuracy": 59.56284153005464,
+      "n_auto": 183
     },
     {
       "threshold": 0.1,
-      "pct_routed": 6.5,
-      "pct_errors_caught": 13.333333333333334,
-      "n_routed": 13,
-      "errors_caught": 12,
-      "auto_accuracy": 58.288770053475936,
-      "n_auto": 187
+      "pct_routed": 10.5,
+      "pct_errors_caught": 22.22222222222222,
+      "n_routed": 21,
+      "errors_caught": 20,
+      "auto_accuracy": 60.893854748603346,
+      "n_auto": 179
     },
     {
       "threshold": 0.15,
-      "pct_routed": 6.5,
-      "pct_errors_caught": 13.333333333333334,
-      "n_routed": 13,
-      "errors_caught": 12,
-      "auto_accuracy": 58.288770053475936,
-      "n_auto": 187
+      "pct_routed": 10.5,
+      "pct_errors_caught": 22.22222222222222,
+      "n_routed": 21,
+      "errors_caught": 20,
+      "auto_accuracy": 60.893854748603346,
+      "n_auto": 179
     },
     {
       "threshold": 0.2,
-      "pct_routed": 6.5,
-      "pct_errors_caught": 13.333333333333334,
-      "n_routed": 13,
-      "errors_caught": 12,
-      "auto_accuracy": 58.288770053475936,
-      "n_auto": 187
+      "pct_routed": 10.5,
+      "pct_errors_caught": 22.22222222222222,
+      "n_routed": 21,
+      "errors_caught": 20,
+      "auto_accuracy": 60.893854748603346,
+      "n_auto": 179
     },
     {
       "threshold": 0.25,
-      "pct_routed": 6.5,
-      "pct_errors_caught": 13.333333333333334,
-      "n_routed": 13,
-      "errors_caught": 12,
-      "auto_accuracy": 58.288770053475936,
-      "n_auto": 187
+      "pct_routed": 12.0,
+      "pct_errors_caught": 24.444444444444443,
+      "n_routed": 24,
+      "errors_caught": 22,
+      "auto_accuracy": 61.36363636363637,
+      "n_auto": 176
     },
     {
       "threshold": 0.3,
-      "pct_routed": 6.5,
-      "pct_errors_caught": 13.333333333333334,
-      "n_routed": 13,
-      "errors_caught": 12,
-      "auto_accuracy": 58.288770053475936,
-      "n_auto": 187
+      "pct_routed": 14.5,
+      "pct_errors_caught": 28.88888888888889,
+      "n_routed": 29,
+      "errors_caught": 26,
+      "auto_accuracy": 62.57309941520468,
+      "n_auto": 171
     },
     {
       "threshold": 0.35,
-      "pct_routed": 21.5,
-      "pct_errors_caught": 38.888888888888886,
-      "n_routed": 43,
-      "errors_caught": 35,
-      "auto_accuracy": 64.96815286624204,
-      "n_auto": 157
+      "pct_routed": 16.5,
+      "pct_errors_caught": 33.333333333333336,
+      "n_routed": 33,
+      "errors_caught": 30,
+      "auto_accuracy": 64.07185628742515,
+      "n_auto": 167
     },
     {
       "threshold": 0.4,
-      "pct_routed": 21.5,
-      "pct_errors_caught": 38.888888888888886,
-      "n_routed": 43,
-      "errors_caught": 35,
-      "auto_accuracy": 64.96815286624204,
-      "n_auto": 157
+      "pct_routed": 27.0,
+      "pct_errors_caught": 46.666666666666664,
+      "n_routed": 54,
+      "errors_caught": 42,
+      "auto_accuracy": 67.12328767123287,
+      "n_auto": 146
     },
     {
       "threshold": 0.45,
-      "pct_routed": 21.5,
-      "pct_errors_caught": 38.888888888888886,
-      "n_routed": 43,
-      "errors_caught": 35,
-      "auto_accuracy": 64.96815286624204,
-      "n_auto": 157
+      "pct_routed": 32.0,
+      "pct_errors_caught": 51.111111111111114,
+      "n_routed": 64,
+      "errors_caught": 46,
+      "auto_accuracy": 67.64705882352942,
+      "n_auto": 136
     },
     {
       "threshold": 0.5,
-      "pct_routed": 21.5,
-      "pct_errors_caught": 38.888888888888886,
-      "n_routed": 43,
-      "errors_caught": 35,
-      "auto_accuracy": 64.96815286624204,
-      "n_auto": 157
+      "pct_routed": 33.5,
+      "pct_errors_caught": 54.44444444444444,
+      "n_routed": 67,
+      "errors_caught": 49,
+      "auto_accuracy": 69.17293233082707,
+      "n_auto": 133
     },
     {
       "threshold": 0.55,
-      "pct_routed": 21.5,
-      "pct_errors_caught": 38.888888888888886,
-      "n_routed": 43,
-      "errors_caught": 35,
-      "auto_accuracy": 64.96815286624204,
-      "n_auto": 157
+      "pct_routed": 38.0,
+      "pct_errors_caught": 57.77777777777778,
+      "n_routed": 76,
+      "errors_caught": 52,
+      "auto_accuracy": 69.35483870967742,
+      "n_auto": 124
     },
     {
       "threshold": 0.6,
-      "pct_routed": 21.5,
-      "pct_errors_caught": 38.888888888888886,
-      "n_routed": 43,
-      "errors_caught": 35,
-      "auto_accuracy": 64.96815286624204,
-      "n_auto": 157
+      "pct_routed": 42.5,
+      "pct_errors_caught": 61.111111111111114,
+      "n_routed": 85,
+      "errors_caught": 55,
+      "auto_accuracy": 69.56521739130434,
+      "n_auto": 115
     },
     {
       "threshold": 0.65,
-      "pct_routed": 21.5,
-      "pct_errors_caught": 38.888888888888886,
-      "n_routed": 43,
-      "errors_caught": 35,
-      "auto_accuracy": 64.96815286624204,
-      "n_auto": 157
+      "pct_routed": 54.0,
+      "pct_errors_caught": 73.33333333333333,
+      "n_routed": 108,
+      "errors_caught": 66,
+      "auto_accuracy": 73.91304347826086,
+      "n_auto": 92
     },
     {
       "threshold": 0.7,
-      "pct_routed": 49.0,
-      "pct_errors_caught": 64.44444444444444,
-      "n_routed": 98,
-      "errors_caught": 58,
-      "auto_accuracy": 68.62745098039215,
-      "n_auto": 102
+      "pct_routed": 67.5,
+      "pct_errors_caught": 84.44444444444444,
+      "n_routed": 135,
+      "errors_caught": 76,
+      "auto_accuracy": 78.46153846153847,
+      "n_auto": 65
     },
     {
       "threshold": 0.75,
-      "pct_routed": 49.0,
-      "pct_errors_caught": 64.44444444444444,
-      "n_routed": 98,
-      "errors_caught": 58,
-      "auto_accuracy": 68.62745098039215,
-      "n_auto": 102
+      "pct_routed": 73.0,
+      "pct_errors_caught": 87.77777777777777,
+      "n_routed": 146,
+      "errors_caught": 79,
+      "auto_accuracy": 79.62962962962963,
+      "n_auto": 54
     },
     {
       "threshold": 0.8,
-      "pct_routed": 49.0,
-      "pct_errors_caught": 64.44444444444444,
-      "n_routed": 98,
-      "errors_caught": 58,
-      "auto_accuracy": 68.62745098039215,
-      "n_auto": 102
+      "pct_routed": 78.0,
+      "pct_errors_caught": 91.11111111111111,
+      "n_routed": 156,
+      "errors_caught": 82,
+      "auto_accuracy": 81.81818181818183,
+      "n_auto": 44
     },
     {
       "threshold": 0.85,
-      "pct_routed": 49.0,
-      "pct_errors_caught": 64.44444444444444,
-      "n_routed": 98,
-      "errors_caught": 58,
-      "auto_accuracy": 68.62745098039215,
-      "n_auto": 102
+      "pct_routed": 90.5,
+      "pct_errors_caught": 96.66666666666667,
+      "n_routed": 181,
+      "errors_caught": 87,
+      "auto_accuracy": 84.21052631578947,
+      "n_auto": 19
     },
     {
       "threshold": 0.9,
-      "pct_routed": 49.0,
-      "pct_errors_caught": 64.44444444444444,
-      "n_routed": 98,
-      "errors_caught": 58,
-      "auto_accuracy": 68.62745098039215,
-      "n_auto": 102
+      "pct_routed": 98.5,
+      "pct_errors_caught": 100.0,
+      "n_routed": 197,
+      "errors_caught": 90,
+      "auto_accuracy": 100.0,
+      "n_auto": 3
     },
     {
       "threshold": 0.95,
-      "pct_routed": 49.0,
-      "pct_errors_caught": 64.44444444444444,
-      "n_routed": 98,
-      "errors_caught": 58,
-      "auto_accuracy": 68.62745098039215,
-      "n_auto": 102
+      "pct_routed": 100.0,
+      "pct_errors_caught": 100.0,
+      "n_routed": 200,
+      "errors_caught": 90,
+      "auto_accuracy": NaN,
+      "n_auto": 0
     },
     {
       "threshold": 1.0,
-      "pct_routed": 49.0,
-      "pct_errors_caught": 64.44444444444444,
-      "n_routed": 98,
-      "errors_caught": 58,
-      "auto_accuracy": 68.62745098039215,
-      "n_auto": 102
+      "pct_routed": 100.0,
+      "pct_errors_caught": 100.0,
+      "n_routed": 200,
+      "errors_caught": 90,
+      "auto_accuracy": NaN,
+      "n_auto": 0
     }
   ],
   "operating_point": {
     "threshold": 0.35,
-    "pct_routed": 21.5,
-    "pct_errors_caught": 38.888888888888886,
-    "n_routed": 43,
-    "errors_caught": 35,
-    "auto_accuracy": 64.96815286624204,
-    "n_auto": 157
+    "pct_routed": 16.5,
+    "pct_errors_caught": 33.333333333333336,
+    "n_routed": 33,
+    "errors_caught": 30,
+    "auto_accuracy": 64.07185628742515,
+    "n_auto": 167
   }
 }

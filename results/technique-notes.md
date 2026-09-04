@@ -267,3 +267,69 @@ strong argument for self-correction, until you read the self-correction result
 above: it repairs executability without repairing correctness, converting loud
 failures into silent ones. The two findings only make sense together, and
 together they are the argument for routing rather than for repair.
+
+---
+
+# v2 calibration — the layer that fixes overconfidence
+
+Fitted on 200 `calib` questions, reported on 200 `eval_500` questions. The two
+sets are disjoint by construction, and `ConfidenceModel.fit()` raises if they
+ever overlap.
+
+| Scorer | Brier ↓ | ECE ↓ |
+|---|---:|---:|
+| v1 — raw agreement rate | 0.2622 | 0.2033 |
+| **v2 — calibrated logistic over 14 features** | **0.1943** | **0.0507** |
+
+**Expected calibration error falls 4×.** The v1 reliability curve was monotonic
+but sat below the diagonal everywhere — it ranked risk correctly while
+overstating confidence. v2 lands on the diagonal:
+
+| predicted | observed | n |
+|---:|---:|---:|
+| 0.02 | 0.05 | 21 |
+| 0.26 | 0.25 | 8 |
+| 0.37 | 0.36 | 25 |
+| 0.43 | 0.46 | 13 |
+| 0.55 | 0.67 | 18 |
+| 0.65 | 0.58 | 50 |
+| 0.76 | 0.71 | 21 |
+| 0.86 | 0.80 | 41 |
+| 0.94 | 1.00 | 3 |
+
+A v2 score of 0.7 now means roughly a 70% chance of being right. A v1 score of
+0.67 meant about 58%.
+
+## It also removes the k=3 granularity limit
+
+Earlier in this file the routing curve was recorded as a step function with three
+usable points, because k=3 agreement admits only four values (0, ⅓, ⅔, 1). That
+was framed as a hard constraint requiring larger k.
+
+**It was a v1 constraint, not a k constraint.** The calibrated model produces
+continuous scores, and the same k=3 samples now yield 17 distinct operating
+points:
+
+| threshold | routed to review | errors caught | auto-executed accuracy | lift |
+|---:|---:|---:|---:|---:|
+| 0.10 | 10% | 22% | 60.9% | 2.12× |
+| 0.35 | 16% | 33% | 64.1% | 2.02× |
+| **0.40** | **27%** | **47%** | **67.1%** | **1.73×** |
+| 0.50 | 34% | 54% | 69.2% | 1.63× |
+| 0.65 | 54% | 73% | 73.9% | 1.36× |
+| 0.70 | 68% | 84% | 78.5% | 1.25× |
+
+**The money metric, leakage-free: routing 27% of queries to human review catches
+47% of all incorrect answers, and everything auto-executed is 67.1% correct
+rather than 54.5%.**
+
+The threshold is a reported tunable, not a magic constant — the table is the
+deliverable. A team with reviewer capacity for 10% of traffic catches 22% of
+errors; one that can review 54% catches 73%.
+
+## Correction to an earlier claim
+
+This file previously stated that k=3 "is not enough to tune a threshold finely"
+and that finer control "needs larger k". That was measured against v1 and is
+wrong as a general claim. Calibration, not more samples, was the missing piece —
+and calibration costs one model fit rather than 5/3× the generation budget.

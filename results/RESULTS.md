@@ -38,6 +38,7 @@ Paired (exact McNemar, same questions): **+5.0 points**, 61 fixed, 36 broken, p 
 | Scorer | n | Brier ↓ | ECE ↓ | base accuracy |
 |---|---:|---:|---:|---:|
 | k3-eval200 v1 (agreement only) | 200 | **0.2622** | 0.2033 | 55.0% |
+| k3-eval200 v2 (calibrated, 200 calibration questions) | 200 | **0.1943** | 0.0507 | 55.0% |
 
 Single-sample runs, shown as a control:
 
@@ -56,12 +57,25 @@ Reliability diagrams: `results/calibration-*.png`
 
 | threshold | % routed to review | % of errors caught | auto-executed accuracy | lift |
 |---:|---:|---:|---:|---:|
-| 0.05 | 6% | 13% | 58.3% | 2.05× |
-| 0.35 | 22% | 39% | 65.0% | 1.81× |
-| 0.70 | 49% | 64% | 68.6% | 1.32× |
+| 0.05 | 8% | 18% | 59.6% | 2.09× |
+| 0.10 | 10% | 22% | 60.9% | 2.12× |
+| 0.25 | 12% | 24% | 61.4% | 2.04× |
+| 0.30 | 14% | 29% | 62.6% | 1.99× |
+| 0.35 | 16% | 33% | 64.1% | 2.02× |
+| 0.40 | 27% | 47% | 67.1% | 1.73× |
+| 0.45 | 32% | 51% | 67.6% | 1.60× |
+| 0.50 | 34% | 54% | 69.2% | 1.63× |
+| 0.55 | 38% | 58% | 69.4% | 1.52× |
+| 0.60 | 42% | 61% | 69.6% | 1.44× |
+| 0.65 | 54% | 73% | 73.9% | 1.36× |
+| 0.70 | 68% | 84% | 78.5% | 1.25× |
+| 0.75 | 73% | 88% | 79.6% | 1.20× |
+| 0.80 | 78% | 91% | 81.8% | 1.17× |
+| 0.85 | 90% | 97% | 84.2% | 1.07× |
+| 0.90 | 98% | 100% | 100.0% | 1.02× |
 
 
-> At threshold 0.35: routed **22%** of queries to review, catching **39%** of all incorrect queries. Everything auto-executed was 65.0% correct.
+> At threshold 0.35: routed **16%** of queries to review, catching **33%** of all incorrect queries. Everything auto-executed was 64.1% correct.
 
 Routing curves: `results/routing-*.png`
 
@@ -76,6 +90,7 @@ Routing curves: `results/routing-*.png`
 | `fewshot3-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 58.0% | $0.0000 | 20.1s |
 | `final-eval500` | ollama | `qwen2.5-coder:7b` | 500 | 50.4% | $0.0000 | 19.7s |
 | `k3-calib200` | ollama | `qwen2.5-coder:7b` | 200 | 78.0% | $0.0000 | 32.0s |
+| `k3-calib200-clean` | ollama | `qwen2.5-coder:7b` | 200 | 53.5% | $0.0000 | 49.5s |
 | `k3-eval200` | ollama | `qwen2.5-coder:7b` | 200 | 54.5% | $0.0000 | 30.5s |
 | `noevidence-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 42.0% | $0.0000 | 9.6s |
 | `pruned-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 18.3s |
