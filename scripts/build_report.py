@@ -117,6 +117,15 @@ def section_headline(runs: dict[str, dict]) -> str:
     return out
 
 
+def _comparisons() -> dict[str, dict]:
+    """Paired McNemar results keyed by run tag, if compare.py has been run."""
+    f = RESULTS / "comparisons.json"
+    if not f.exists():
+        return {}
+    data = json.loads(f.read_text(encoding="utf-8"))
+    return {c["tag"]: c for c in data.get("comparisons", [])}
+
+
 def section_techniques(runs: dict[str, dict]) -> str:
     order = [
         "baseline-dev50",
@@ -131,24 +140,38 @@ def section_techniques(runs: dict[str, dict]) -> str:
         return "_Ablations not yet complete._\n"
 
     base_ex = runs.get("baseline-dev50", {}).get("ex")
+    cmps = _comparisons()
     lines = [
-        "| Technique | EX | Δ vs baseline | mean latency | empty preds |",
-        "|---|---:|---:|---:|---:|",
+        "| Technique | EX | Δ | helped | hurt | p | verdict |",
+        "|---|---:|---:|---:|---:|---:|---|",
     ]
     for key in present:
         r = runs[key]
-        d = "—" if base_ex is None or r["ex"] is None else f"{r['ex'] - base_ex:+.1f}"
-        lines.append(
-            f"| {TECHNIQUES.get(key, key)} | {fmt(r['ex'])}% | {d} | "
-            f"{fmt(r['latency'], '.1f')}s | {fmt(r['empty'], '.0f')} |"
-        )
-    n = runs.get("baseline-dev50", {}).get("n", 50)
+        if key == "baseline-dev50":
+            lines.append(
+                f"| {TECHNIQUES.get(key, key)} | {fmt(r['ex'])}% | — | — | — | — | reference |"
+            )
+            continue
+        c = cmps.get(key)
+        if c:
+            verdict = "**significant**" if c["significant"] else "not distinguishable"
+            lines.append(
+                f"| {TECHNIQUES.get(key, key)} | {fmt(r['ex'])}% | "
+                f"{c['delta_points']:+.1f} | {c['helped']} | {c['hurt']} | "
+                f"{c['p_value']:.4f} | {verdict} |"
+            )
+        else:
+            d = "—" if base_ex is None or r["ex"] is None else f"{r['ex'] - base_ex:+.1f}"
+            lines.append(
+                f"| {TECHNIQUES.get(key, key)} | {fmt(r['ex'])}% | {d} | — | — | — | not tested |"
+            )
     lines.append("")
     lines.append(
-        f"> All rows measured on `dev_50` (n={n}), where the 95% CI is "
-        f"±{ci95(base_ex or 50, n):.1f} points. **Deltas smaller than that are not "
-        f"significant** — they are reported because negative and null results are "
-        f"part of the record, not because they are conclusive."
+        "> Comparisons are **paired** (exact McNemar on the same questions), not "
+        "comparisons of independent intervals. The runs share their questions, and "
+        "discarding that pairing costs enough power to hide real effects: on "
+        "`dev_50` the unpaired interval is ±13 points, which would call almost "
+        "anything inconclusive. Null and negative results are kept."
     )
     return "\n".join(lines)
 
@@ -157,34 +180,80 @@ def section_calibration() -> str:
     files = sorted(RESULTS.glob("calibration-*.json"))
     if not files:
         return "_Calibration not yet computed._\n"
-    lines = ["| Scorer | n | Brier ↓ | ECE ↓ | base accuracy |", "|---|---:|---:|---:|---:|"]
+    # Calibration is only meaningful for k>1 runs. At k=1 the agreement rate is
+    # constant at 1.0, so "confidence" is a constant and its Brier score merely
+    # restates the error rate. Listing those beside real calibration numbers
+    # would make the scorer look broken when nothing was actually being scored.
+    ksampled, single = [], []
     for f in files:
         d = json.loads(f.read_text(encoding="utf-8"))
+        (ksampled if "k3" in f.stem else single).append(d)
+
+    lines = ["| Scorer | n | Brier ↓ | ECE ↓ | base accuracy |", "|---|---:|---:|---:|---:|"]
+    for d in ksampled:
         lines.append(
-            f"| {d['label']} | {d['n']} | {d['brier_score']:.4f} | "
+            f"| {d['label']} | {d['n']} | **{d['brier_score']:.4f}** | "
             f"{d['expected_calibration_error']:.4f} | {100 * d['base_accuracy']:.1f}% |"
         )
+    if not ksampled:
+        lines.append("| _no k>1 run analysed yet_ | | | | |")
+
+    if single:
+        lines += [
+            "",
+            "Single-sample runs, shown as a control:",
+            "",
+            "| Scorer | n | Brier | ECE |",
+            "|---|---:|---:|---:|",
+        ]
+        for d in single:
+            lines.append(
+                f"| {d['label']} | {d['n']} | {d['brier_score']:.4f} | "
+                f"{d['expected_calibration_error']:.4f} |"
+            )
+        lines += [
+            "",
+            "> At k=1 the agreement rate is constant at 1.0, so the confidence score "
+            "is a constant and its Brier value merely restates the error rate. "
+            "**These rows measure nothing about calibration** — they are the control "
+            "showing why self-consistency sampling is required for a confidence "
+            "signal to exist at all.",
+        ]
     return "\n".join(lines)
 
 
 def section_routing() -> str:
-    files = sorted(RESULTS.glob("routing-*.json"))
+    # Only k>1 runs produce a routing curve worth reading. At k=1 confidence
+    # takes two values (0 when execution failed, 1 otherwise), so every
+    # threshold routes the same set and the "curve" is a single flat line.
+    files = [f for f in sorted(RESULTS.glob("routing-*.json")) if "k3" in f.stem]
     if not files:
-        return "_Routing curve not yet computed._\n"
+        return (
+            "_No k>1 routing curve computed yet. Single-sample runs produce a flat "
+            "curve — confidence takes only two values — so they are not shown._\n"
+        )
     out = []
     for f in files:
         d = json.loads(f.read_text(encoding="utf-8"))
         pt = d.get("operating_point")
         rows = [
-            "| threshold | % routed to review | % of errors caught | auto-executed accuracy |",
-            "|---:|---:|---:|---:|",
+            "| threshold | % routed to review | % of errors caught | auto-executed accuracy | lift |",
+            "|---:|---:|---:|---:|---:|",
         ]
+        seen: set[tuple[int, int]] = set()
         for r in d["curve"]:
             if r["n_routed"] == 0 or r["threshold"] > 0.9:
                 continue
+            # collapse the flat runs a discrete agreement rate produces
+            key = (round(r["pct_routed"]), round(r["pct_errors_caught"]))
+            if key in seen:
+                continue
+            seen.add(key)
+            lift = r["pct_errors_caught"] / r["pct_routed"] if r["pct_routed"] else 0.0
             rows.append(
                 f"| {r['threshold']:.2f} | {r['pct_routed']:.0f}% | "
-                f"{r['pct_errors_caught']:.0f}% | {fmt(r['auto_accuracy'])}% |"
+                f"{r['pct_errors_caught']:.0f}% | {fmt(r['auto_accuracy'])}% | "
+                f"{lift:.2f}× |"
             )
         out.append(f"**{f.stem.replace('routing-', '')}**\n\n" + "\n".join(rows))
         if pt:

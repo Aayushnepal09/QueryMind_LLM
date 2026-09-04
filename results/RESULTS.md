@@ -10,28 +10,56 @@ disjoint from `eval_500` by construction.
 
 ## Headline: before and after
 
-_Headline run not yet complete._
+| Configuration | Split | n | EX | 95% CI | simple | moderate | challenging |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Baseline | `eval_500` | 500 | **45.6%** | ±4.3 | 53.2 | 31.8 | 41.7 |
+| Final (few-shot + self-correction) | `eval_500` | 500 | **50.4%** | ±4.4 | 58.1 | 39.1 | 37.5 |
+
+Delta: **+4.8 points** — larger than the measurement margin, so it is a real improvement.
 
 
 ## Per-technique deltas
 
-| Technique | EX | Δ vs baseline | mean latency | empty preds |
-|---|---:|---:|---:|---:|
-| Baseline (ported QueryMind prompt, single-shot) | 62.0% | +0.0 | 0.0s | 0 |
+| Technique | EX | Δ | helped | hurt | p | verdict |
+|---|---:|---:|---:|---:|---:|---|
+| Baseline (ported QueryMind prompt, single-shot) | 62.0% | — | — | — | — | reference |
+| + few-shot retrieval (k=3 exemplars) | 58.0% | -4.0 | 6 | 8 | 0.7905 | not distinguishable |
+| + schema pruning | 62.0% | +0.0 | 0 | 0 | 1.0000 | not distinguishable |
+| + self-correction (max 2 rounds) | 62.0% | +0.0 | 0 | 0 | 1.0000 | not distinguishable |
+| Combined (few-shot + self-correction) | 64.0% | +2.0 | 6 | 5 | 1.0000 | not distinguishable |
+| − BIRD evidence field (ablation) | 42.0% | -20.0 | 4 | 14 | 0.0309 | **significant** |
 
-> All rows measured on `dev_50` (n=50), where the 95% CI is ±13.0 points. **Deltas smaller than that are not significant** — they are reported because negative and null results are part of the record, not because they are conclusive.
+> Comparisons are **paired** (exact McNemar on the same questions), not comparisons of independent intervals. The runs share their questions, and discarding that pairing costs enough power to hide real effects: on `dev_50` the unpaired interval is ±13 points, which would call almost anything inconclusive. Null and negative results are kept.
 
 ## Confidence calibration
 
-_Calibration not yet computed._
+| Scorer | n | Brier ↓ | ECE ↓ | base accuracy |
+|---|---:|---:|---:|---:|
+| k3-eval200 v1 (agreement only) | 200 | **0.2622** | 0.2033 | 55.0% |
 
+Single-sample runs, shown as a control:
+
+| Scorer | n | Brier | ECE |
+|---|---:|---:|---:|
+| baseline-eval500 v1 (agreement only) | 500 | 0.3820 | 0.3820 |
+| final-eval500 v1 (agreement only) | 500 | 0.4960 | 0.4960 |
+
+> At k=1 the agreement rate is constant at 1.0, so the confidence score is a constant and its Brier value merely restates the error rate. **These rows measure nothing about calibration** — they are the control showing why self-consistency sampling is required for a confidence signal to exist at all.
 
 Reliability diagrams: `results/calibration-*.png`
 
 ## Routing — the money metric
 
-_Routing curve not yet computed._
+**k3-eval200**
 
+| threshold | % routed to review | % of errors caught | auto-executed accuracy | lift |
+|---:|---:|---:|---:|---:|
+| 0.05 | 6% | 13% | 58.3% | 2.05× |
+| 0.35 | 22% | 39% | 65.0% | 1.81× |
+| 0.70 | 49% | 64% | 68.6% | 1.32× |
+
+
+> At threshold 0.35: routed **22%** of queries to review, catching **39%** of all incorrect queries. Everything auto-executed was 65.0% correct.
 
 Routing curves: `results/routing-*.png`
 
@@ -41,13 +69,32 @@ Routing curves: `results/routing-*.png`
 |---|---|---|---:|---:|---:|---:|
 | `baseline` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 10.8s |
 | `baseline-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 0.0s |
+| `baseline-eval500` | ollama | `qwen2.5-coder:7b` | 500 | 45.6% | $0.0000 | 9.0s |
+| `combined-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 64.0% | $0.0000 | 0.0s |
+| `fewshot3-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 58.0% | $0.0000 | 20.1s |
+| `final-eval500` | ollama | `qwen2.5-coder:7b` | 500 | 50.4% | $0.0000 | 19.7s |
+| `k3-calib200` | ollama | `qwen2.5-coder:7b` | 200 | 78.0% | $0.0000 | 32.0s |
+| `k3-eval200` | ollama | `qwen2.5-coder:7b` | 200 | 54.5% | $0.0000 | 30.5s |
+| `noevidence-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 42.0% | $0.0000 | 9.6s |
+| `pruned-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 18.3s |
+| `selfcorrect-dev50` | ollama | `qwen2.5-coder:7b` | 50 | 62.0% | $0.0000 | 0.0s |
 
 > Nominal cost is what the run *would* cost at list price. Actual spend was **$0**: the local model is free and Gemini ran on its free tier.
 
 ## Failure taxonomy
 
-_Failure taxonomy not yet computed._
+90 incorrect of 200 scored.
 
+| Category | Count | Share | What it means |
+|---|---:|---:|---|
+| `join_path_error` | 40 | 44% | Different set of tables joined than gold |
+| `other` | 29 | 32% | Incorrect for a reason not automatically classifiable |
+| `execution_error` | 7 | 8% | SQL was syntactically or semantically invalid |
+| `aggregation_error` | 7 | 8% | Aggregation or grouping differs from gold |
+| `value_matching` | 3 | 3% | Filters on a literal that does not match the stored value |
+| `ordering_or_limit` | 2 | 2% | Differs only in ORDER BY / LIMIT |
+| `wrong_columns` | 1 | 1% | Right rows, wrong columns returned |
+| `empty_result` | 1 | 1% | Query ran but returned no rows where gold returns some |
 
 Category definitions and the limits of the classifier: `docs/failure-taxonomy.md`.
 Every failure with its question, prediction and gold SQL: `results/failures-*.json`.
