@@ -10,11 +10,10 @@
 
 ## Current state
 
-**All phases COMPLETE** except the v2 calibrated confidence model, which waits
-on one running job.
+**ALL PHASES COMPLETE (2026-09-04).** Nothing is running; nothing is pending.
 **Active branch:** `chore/cleanup` (merged into `sqlsentinel`, pushed to origin)
 **Tests:** 196 passing, ruff clean and formatted.
-**Running:** clean `k3-calib200` re-run (600 generations). When it finishes:
+**Everything below has been run and its output committed.** To regenerate:
 
 ```bash
 uv run python scripts/analyze.py results/traces/k3-eval200.json --label k3-eval200   --calib-traces results/traces/k3-calib200.json   # fits and reports v2
@@ -81,7 +80,22 @@ Existing repo contents at `main` (commit `1e90f3c`):
 - [x] **Phase 2 code** — DONE. `retrieval.py` (TF-IDF over calib), `Schema.prune()`, self-correction, k-sample voting. Ablation runs in progress.
 - [x] **Phase 3 code** — DONE. `confidence.py` (v1 agreement, v2 calibrated, Brier/ECE/reliability), `router.py` (risk rules + routing curve), `app/review_ui.py`. Runs in progress.
 - [x] **Phase 4** — DONE. `api.py`, `tracing.py`, Dockerfile + compose (api/review/phoenix), `.github/workflows/eval-gate.yml`, `scripts/check_regression.py`.
-- [~] **Phase 5** — README, failure taxonomy, reproduction guide and report generator written. Awaiting numbers from the sweep.
+- [x] **Phase 5** — DONE. README with figures, `results/RESULTS.md`, `results/FINDINGS.md` (8 secondary findings), failure taxonomy with worked examples, reproduction guide, resume bullets.
+- [x] **Stretch** — MCP server (`sqlsentinel.mcp_server`), 4 tools with trust levels.
+
+## Final numbers
+
+| | n | EX | 95% CI |
+|---|---:|---:|---:|
+| Chance floor | 500 | 3.0% | ±1.5 |
+| **Baseline** | 500 | **45.6%** | ±4.3 |
+| **Final** | 500 | **50.4%** | ±4.4 |
+| k=3 self-consistency | 200 | 55.0% | ±6.8 |
+
+Paired: final **+5.0 pts p=0.014**; k=3 **+9.0 pts p=0.008**.
+Calibration: Brier 0.262 → **0.194**, ECE 0.203 → **0.051**.
+Routing: **27% reviewed catches 47% of errors**, auto-executed 54.5% → **67.1%**.
+Tests **264**, coverage **92%**.
 
 ## Recorded numbers
 
