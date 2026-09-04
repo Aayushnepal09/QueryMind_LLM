@@ -13,6 +13,17 @@
       "significant": true
     },
     {
+      "tag": "final-eval500",
+      "accuracy": 50.4,
+      "n": 500,
+      "delta_points": 5.0,
+      "helped": 61,
+      "hurt": 36,
+      "discordant": 97,
+      "p_value": 0.014389633007095661,
+      "significant": true
+    },
+    {
       "tag": "combined-dev50",
       "accuracy": 64.0,
       "n": 50,

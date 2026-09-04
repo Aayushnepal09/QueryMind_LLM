@@ -36,9 +36,16 @@ blocks merges on accuracy regressions.
 | **Final** — few-shot + self-correction | 500 | **50.4%** | ±4.4 |
 | k=3 self-consistency | 200 | **55.0%** | ±6.8 |
 
-Paired on the same questions: **+4.8 points** for the final configuration
-(p = 0.014), **+9.0 points** for k=3 self-consistency (p = 0.008). Both
-significant under an exact McNemar test.
+Paired on the same questions: **+5.0 points** for the final configuration
+(61 questions fixed, 36 broken, p = 0.014) and **+9.0 points** for k=3
+self-consistency (30 fixed, 12 broken, p = 0.008). Both significant under an
+exact McNemar test.
+
+<sub>The paired delta is +5.0 while the table above shows 45.6% → 50.4% (+4.8).
+Both are correct: the table reports BIRD's official scorer, while the paired
+test uses per-question labels computed by this project's own executor, and the
+two disagree on a single baseline question out of 500 (45.6% vs 45.4%).
+`scripts/analyze.py` hard-fails if that gap ever exceeds half a question.</sub>
 
 **→ [results/RESULTS.md](results/RESULTS.md)** — generated from MLflow and the
 analysis artifacts, never hand-edited, so the reported numbers cannot drift from
