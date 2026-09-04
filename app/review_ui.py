@@ -31,6 +31,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import theme
 
 from sqlsentinel.executor import bird_executor
 from sqlsentinel.explain import describe_confidence, explain
@@ -40,7 +41,12 @@ QUEUE_FILE = REPO_ROOT / "results" / "review_queue.json"
 DECISIONS_DB = REPO_ROOT / "results" / "review_decisions.db"
 DB_ROOT = REPO_ROOT / "data" / "bird" / "dev_20240627" / "dev_databases"
 
-st.set_page_config(page_title="SQLSentinel Review", page_icon="🛡️", layout="wide")
+st.set_page_config(
+    page_title="SQLSentinel Review",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 
 # ---------------------------------------------------------------- storage
@@ -126,11 +132,13 @@ def render_answer(item: dict, sql: str) -> None:
 
 def render_plain(item: dict, sql: str) -> None:
     exp = explain(sql)
-    st.markdown(f"**In plain terms:** {exp.summary}")
-    for d in exp.details:
-        st.markdown(f"&nbsp;&nbsp;&nbsp;• {d}", unsafe_allow_html=True)
+    rows = "".join(f'<div class="plain-item">{d}</div>' for d in exp.details)
+    st.markdown(
+        f'<div class="plain"><div class="plain-lead">{exp.summary}</div>{rows}</div>',
+        unsafe_allow_html=True,
+    )
     for w in exp.warnings:
-        st.warning(w)
+        st.warning(w, icon="⚠️")
 
 
 def render_expert(item: dict, key: str) -> str:
@@ -148,10 +156,10 @@ def main() -> None:
     conn = init_db()
     queue = load_queue()
 
-    st.title("🛡️ SQLSentinel — Review Queue")
-    st.caption(
-        "These questions were answered with low confidence, or triggered a safety "
-        "rule. Each one needs a person to confirm the answer before it is used."
+    theme.inject()
+    theme.header(
+        "SQLSentinel",
+        "Questions the system was unsure about. Each needs a person to confirm the answer.",
     )
 
     if not queue:
@@ -165,11 +173,17 @@ def main() -> None:
     done = decided_ids(conn)
     pending = [i for i in queue if i["question_id"] not in done]
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("In queue", len(queue))
-    c2.metric("Reviewed", len(done))
-    c3.metric("Pending", len(pending))
-    c4.metric("Progress", f"{100 * len(done) / len(queue):.0f}%")
+    pct = 100 * len(done) / len(queue)
+    high = sum(1 for i in pending if i.get("confidence", 0) < 0.34)
+    theme.stats(
+        [
+            ("in queue", str(len(queue))),
+            ("reviewed", str(len(done))),
+            ("pending", str(len(pending))),
+            ("high risk", str(high)),
+        ],
+        progress=pct,
+    )
 
     with st.sidebar:
         st.header("View")
@@ -207,35 +221,43 @@ def main() -> None:
     for item in items:
         qid = item["question_id"]
         conf = float(item.get("confidence", 0.0))
-        badge = "🔴" if conf < 0.34 else "🟡" if conf < 0.7 else "🟢"
+        _, _, dot = theme.severity(conf)
+        title = item["question"] if len(item["question"]) <= 96 else item["question"][:96] + "…"
 
-        with st.expander(f"{badge} {item['question'][:95]}", expanded=False):
-            st.markdown(f"### {item['question']}")
+        with st.expander(f"{dot}  {title}", expanded=False):
+            st.markdown(
+                f'{theme.pill(conf)}<div class="question">{item["question"]}</div>',
+                unsafe_allow_html=True,
+            )
             if item.get("evidence"):
-                st.caption(f"Context provided with the question: {item['evidence']}")
+                st.markdown(
+                    f'<div class="context">{item["evidence"]}</div>', unsafe_allow_html=True
+                )
 
-            st.info(describe_confidence(conf, int(item.get("n_candidates", 1))))
+            st.info(describe_confidence(conf, int(item.get("n_candidates", 1))), icon="🎯")
             if item.get("reasons"):
                 st.caption("Flagged because: " + "; ".join(item["reasons"]))
 
-            st.divider()
-
             if expert:
+                st.markdown('<div class="label">Query</div>', unsafe_allow_html=True)
                 sql = render_expert(item, key=f"sql_{qid}")
-                st.markdown("**Result preview**")
+                st.markdown('<div class="label">Result</div>', unsafe_allow_html=True)
                 render_answer(item, sql)
                 with st.expander("Plain-English description"):
                     render_plain(item, sql)
             else:
-                st.markdown("#### The answer the system found")
+                st.markdown(
+                    '<div class="label">The answer the system found</div>',
+                    unsafe_allow_html=True,
+                )
                 render_answer(item, item.get("sql", ""))
-                st.divider()
+                st.markdown('<div class="label">What this query does</div>', unsafe_allow_html=True)
                 render_plain(item, item.get("sql", ""))
                 with st.expander("Show the database query (for engineers)"):
                     st.code(item.get("sql", ""), language="sql")
                 sql = item.get("sql", "")
 
-            st.divider()
+            st.markdown('<div class="label">Your decision</div>', unsafe_allow_html=True)
             note = st.text_input(
                 "Note (optional) — if this is wrong, what should it have shown?",
                 key=f"note_{qid}",

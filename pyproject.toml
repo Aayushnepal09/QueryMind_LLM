@@ -88,7 +88,7 @@ ignore = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "app"]
 addopts = "-q --strict-markers"
 filterwarnings = [
     "ignore::DeprecationWarning:starlette.*",
