@@ -10,8 +10,10 @@ SWEEP="$1"
 until grep -aq "ALL EXPERIMENTS COMPLETE" "$SWEEP" 2>/dev/null; do sleep 60; done
 echo "[chain] main sweep finished; re-running k3-calib200 clean"
 
+# --predictor agent is NOT optional here: the CLI defaults to the stub
+# predictor, so omitting it silently scores the chance floor instead of failing.
 uv run python -m sqlsentinel.eval \
-  --split calib --subset 200 --provider ollama --workers 1 \
+  --predictor agent --split calib --subset 200 --provider ollama --workers 1 \
   --k 3 --max-corrections 2 --few-shot 3 \
   --tag k3-calib200-clean \
   --dump-traces results/traces/k3-calib200.json > logs/k3-calib200-clean.log 2>&1

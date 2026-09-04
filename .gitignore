@@ -205,3 +205,4 @@ mlartifacts/
 logs/
 results/review_queue.json
 results/review_decisions.db
+results/.labels_cache.json
