@@ -15,7 +15,9 @@ disjoint from `eval_500` by construction.
 | Baseline | `eval_500` | 500 | **45.6%** | ±4.3 | 53.2 | 31.8 | 41.7 |
 | Final (few-shot + self-correction) | `eval_500` | 500 | **50.4%** | ±4.4 | 58.1 | 39.1 | 37.5 |
 
-Delta: **+4.8 points** — larger than the measurement margin, so it is a real improvement.
+Delta: **+4.8 points** — larger than the measurement margin.
+
+Paired (exact McNemar, same questions): **+5.0 points**, 61 fixed, 36 broken, p = 0.0144 — **significant**. It differs from the interval delta above because that uses BIRD's official scorer while this uses per-question labels from this project's executor; the two disagree on a single question.
 
 
 ## Per-technique deltas

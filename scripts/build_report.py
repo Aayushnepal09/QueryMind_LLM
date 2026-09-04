@@ -109,11 +109,27 @@ def section_headline(runs: dict[str, dict]) -> str:
         delta = final["ex"] - base["ex"]
         margin = ci95(base["ex"], base["n"])
         verdict = (
-            "larger than the measurement margin, so it is a real improvement"
+            "larger than the measurement margin"
             if abs(delta) > margin
-            else f"**inside the ±{margin:.1f} margin, so it is not distinguishable from noise**"
+            else f"**inside the ±{margin:.1f} margin, so not distinguishable from noise**"
         )
-        out += f"\n\nDelta: **{delta:+.1f} points** — {verdict}.\n"
+        out += f"\n\nDelta: **{delta:+.1f} points** — {verdict}."
+
+        # The paired test is the one that decides significance; the interval
+        # comparison above is shown because it is what a reader expects to see,
+        # not because it is the stronger evidence.
+        c = _comparisons().get("final-eval500")
+        if c:
+            out += (
+                f"\n\nPaired (exact McNemar, same questions): "
+                f"**{c['delta_points']:+.1f} points**, {c['helped']} fixed, "
+                f"{c['hurt']} broken, p = {c['p_value']:.4f} — "
+                f"{'**significant**' if c['significant'] else 'not distinguishable'}. "
+                f"It differs from the interval delta above because that uses BIRD's "
+                f"official scorer while this uses per-question labels from this "
+                f"project's executor; the two disagree on a single question."
+            )
+        out += "\n"
     return out
 
 
