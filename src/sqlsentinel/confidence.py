@@ -1,4 +1,4 @@
-"""Calibrated confidence scoring (CLAUDE.md section 6).
+"""Calibrated confidence scoring (spec §6).
 
 Two versions, both shipped so the delta between them is reportable:
 
@@ -9,7 +9,7 @@ Two versions, both shipped so the delta between them is reportable:
   v2  a calibrated logistic model over agreement plus per-query features.
 
 The calibration data comes from the `calib` split, which is disjoint from
-`eval_500` by construction. CLAUDE.md calls training and reporting on the same
+`eval_500` by construction. the spec calls training and reporting on the same
 questions "the one mistake that would invalidate the whole project", so the
 split enforces it structurally rather than by discipline: `fit()` refuses data
 containing evaluation question ids.
@@ -204,7 +204,7 @@ def reliability_curve(probs, correct, n_bins: int = 10):
     """Observed accuracy per predicted-probability bin.
 
     A well-calibrated model puts points on the diagonal: of the queries it
-    called 0.6, about 60% should be correct. CLAUDE.md section 6: a
+    called 0.6, about 60% should be correct. spec §6: a
     well-calibrated 0.6 is more useful than an overconfident 0.9.
     """
     probs, correct = np.asarray(probs), np.asarray(correct)

@@ -1,4 +1,4 @@
-"""Fail the build when execution accuracy regresses (CLAUDE.md section 8).
+"""Fail the build when execution accuracy regresses (spec §8).
 
 Compares the accuracy printed by `python -m sqlsentinel.eval` against the
 recorded baseline in results/baseline.json and exits non-zero if it dropped by

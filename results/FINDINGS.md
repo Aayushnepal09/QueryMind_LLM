@@ -221,7 +221,7 @@ proposed fix, would address 2 of 500 questions here.
 
 ## 8. Cost per correct answer
 
-CLAUDE.md §13 asks for provider choice on cost-per-correct-answer rather than
+spec §13 asks for provider choice on cost-per-correct-answer rather than
 raw accuracy. Both providers are free in dollars, so the real currency is time.
 
 | Configuration | EX | seconds per correct answer | mean prompt tokens | nominal USD |

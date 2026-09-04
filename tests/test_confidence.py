@@ -84,7 +84,7 @@ def test_model_beats_a_constant_predictor():
 
 
 def test_leakage_guard_rejects_evaluation_ids():
-    """The guard CLAUDE.md calls project-invalidating if missed."""
+    """The guard the spec calls project-invalidating if missed."""
     feats, correct = _synthetic(50)
     with pytest.raises(ValueError, match="LEAKAGE"):
         ConfidenceModel().fit(feats, correct, question_ids=list(range(50)), forbidden_ids={7, 99})

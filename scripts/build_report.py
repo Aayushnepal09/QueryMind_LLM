@@ -1,7 +1,7 @@
 """Assemble results/RESULTS.md from MLflow runs and the analysis artifacts.
 
 Generated rather than hand-written so the reported numbers cannot drift from
-the measured ones. CLAUDE.md section 11: "commit results, not just code" and
+the measured ones. spec §11: "commit results, not just code" and
 "record honest numbers" -- including the rows where a technique made things
 worse.
 

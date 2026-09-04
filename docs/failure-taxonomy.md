@@ -21,7 +21,7 @@ categories take precedence.
 |---|---|---|
 | `empty_prediction` | No SQL extracted from the model response | The model refused, rambled, or the extractor found nothing SQL-shaped. A pipeline failure, not a reasoning failure. |
 | `execution_error` | SQL did not execute | Hallucinated column or table, syntax error, type mismatch. The most *honest* failure mode: it announces itself, and self-correction can act on it. |
-| `join_path_error` | Predicted and gold reference different table sets | The model misunderstood which entities the question spans. CLAUDE.md §6 flags joins as the dominant failure surface, and this is where that shows. |
+| `join_path_error` | Predicted and gold reference different table sets | The model misunderstood which entities the question spans. spec §6 flags joins as the dominant failure surface, and this is where that shows. |
 | `aggregation_error` | One of predicted/gold aggregates and the other does not | Confusing "how many X" with "which X", or missing a GROUP BY. |
 | `value_matching` | Ran fine, returned zero rows, filters on a string literal | The query is structurally right but filters on a value that does not match what is stored — `'CA'` vs `'California'`, case, whitespace. This is BIRD's "dirty data" difficulty made concrete, and it is the most dangerous category because it looks like a valid empty answer. |
 | `empty_result` | Ran fine, returned zero rows, no string filter | Over-restrictive conditions. |
@@ -38,7 +38,7 @@ Stated plainly because it bounds how far these numbers should be trusted:
 - **`join_path_error` absorbs aliasing noise.** The regex extracts identifiers
   after `FROM`/`JOIN`, so subqueries and CTEs can inflate this bucket.
 - **It cannot recognise an ambiguous question.** BIRD's annotations contain
-  known errors (§7 of CLAUDE.md), so some "failures" are cases where the
+  known errors (§7 of docs/spec.md), so some "failures" are cases where the
   prediction is defensible and the gold is not. Those land in `other` or
   `wrong_columns` and are only separable by hand.
 

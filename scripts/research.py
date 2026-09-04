@@ -270,7 +270,7 @@ def finding_agreement_vs_difficulty(harness) -> dict:
 
 
 def finding_cost_per_correct(harness) -> list[dict]:
-    """Cost per correct answer -- CLAUDE.md section 13's actual decision metric.
+    """Cost per correct answer -- the spec's actual provider-choice metric.
 
     Local generation is free in dollars but not in time, so wall-clock is
     reported alongside the nominal API price the same run would have cost.

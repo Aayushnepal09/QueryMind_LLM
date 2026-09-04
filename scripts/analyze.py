@@ -1,4 +1,4 @@
-"""Turn dumped traces into the report artifacts (CLAUDE.md section 8, Phase 5).
+"""Turn dumped traces into the report artifacts (spec §7).
 
 Produces, into results/:
 
@@ -72,7 +72,7 @@ def classify_failure(trace, gold_sql: str) -> str:
     """Heuristic failure category.
 
     Deliberately rule-based and transparent: the point of the taxonomy is that
-    a reader can check it, and CLAUDE.md asks for ~50 failures inspected with
+    a reader can check it, and the spec asks for ~50 failures inspected with
     an example of each. These rules do the bulk sorting; the report carries
     examples so the categories can be spot-checked by hand.
     """

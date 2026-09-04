@@ -1,6 +1,6 @@
 """Wrapper around BIRD's official execution-accuracy script.
 
-CLAUDE.md section 4 is explicit: wrap the official script, do not reimplement
+spec §4 is explicit: wrap the official script, do not reimplement
 it. Result-set comparison has ordering and type edge cases the official script
 already handles, and a home-grown metric would not be comparable to anything.
 

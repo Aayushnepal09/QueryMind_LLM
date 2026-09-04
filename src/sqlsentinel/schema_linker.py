@@ -1,6 +1,6 @@
 """Schema introspection and prompt rendering.
 
-CLAUDE.md section 4: "Port QueryMind's schema-injection logic. Start dumb:
+spec §4: "Port QueryMind's schema-injection logic. Start dumb:
 include all tables if the DB is small. Optimize only if token cost hurts."
 
 QueryMind's `DATABASE_SCHEMA` was a hand-written string literal describing one
@@ -14,9 +14,8 @@ provided, not the text:
 
 rendered from live introspection instead of being typed out by hand.
 
-Phase 1 emits the full schema. Pruning is `feat/schema-linking` in Phase 2, and
-whether it beats full context is an open question (section 13) to be measured,
-not assumed.
+The default emits the full schema. Whether pruning beats full context is an
+open question to be measured, not assumed.
 """
 
 from __future__ import annotations
@@ -90,7 +89,7 @@ class Schema:
 
         QueryMind's hand-written schema listed its join paths explicitly and
         that was one of its better ideas -- joins are where text-to-SQL breaks
-        (CLAUDE.md section 6 lists n_tables_referenced as a top failure signal).
+        (spec §6 lists n_tables_referenced as a top failure signal).
         """
         return [
             f"{t.name}.{local} -> {ftable}.{fcol}"
@@ -99,7 +98,7 @@ class Schema:
         ]
 
     def prune(self, question: str, evidence: str = "", min_tables: int = 2) -> Schema:
-        """Drop tables the question plausibly does not need (Phase 2).
+        """Drop tables the question plausibly does not need.
 
         Scores each table on lexical overlap between the question (plus BIRD's
         evidence hint) and its table/column names, then keeps everything above a

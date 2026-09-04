@@ -3,17 +3,17 @@
 The prompt here is a direct port of QueryMind's `generate_sql_with_gpt` (see
 docs/migration-notes.md) -- its eight numbered requirements, retargeted from
 PostgreSQL to SQLite and given BIRD's `evidence` field. Keeping it recognisable
-is deliberate: CLAUDE.md section 8 wants QueryMind's prompting to *be* the
-baseline, so that Phase 2's deltas measure new technique rather than incidental
+is deliberate: the spec wants QueryMind's prompting to *be* the
+baseline, so the reported deltas measure new technique rather than incidental
 prompt rewriting.
 
 The extractor is the part that needed real work. QueryMind's version was:
 
     re.sub(r"^```sql\\s*|\\s*```$", "", text, flags=re.I | re.M).strip()
 
-which strips fences and nothing else. Observed model output on 2026-09-03 was
-prose, then a fenced block, then a numbered explanation -- all of which that
-regex would hand to the executor as "SQL".
+which strips fences and nothing else. Observed model output was prose, then a
+fenced block, then a numbered explanation -- all of which that regex would hand
+to the executor as "SQL".
 """
 
 from __future__ import annotations
@@ -57,8 +57,8 @@ SQL query:"""
 # A deliberately minimal control: schema, question, "write SQL". No numbered
 # requirements, no join guidance, no dialect reminders, no formatting rules.
 # This is what someone gets before doing any prompt engineering at all, and it
-# exists to answer CLAUDE.md section 13's question of whether QueryMind's
-# tuned prompt was worth the effort that went into it.
+# exists to answer the spec's question of whether QueryMind's tuned prompt was
+# worth the effort that went into it.
 NAIVE_SYSTEM_PROMPT = "You are a helpful assistant."
 
 NAIVE_TEMPLATE = """Database schema:
@@ -169,7 +169,7 @@ class SQLGenerator:
 
         k=1 uses temperature 0 (deterministic baseline). k>1 defaults to 0.7,
         which is what makes the samples diverge enough for self-consistency
-        agreement to carry signal (CLAUDE.md section 6).
+        agreement to carry signal (spec §6).
         """
         if temperature is None:
             temperature = 0.0 if k == 1 else 0.7

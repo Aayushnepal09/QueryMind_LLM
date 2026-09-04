@@ -1,7 +1,7 @@
 """CLI entry point: `python -m sqlsentinel.eval`.
 
-Phase 0 gate (CLAUDE.md section 8): one command produces an accuracy number.
-Phase 1 swaps --predictor stub for a real agent; nothing else here changes.
+One command produces an accuracy number. `--predictor stub` exercises the
+harness with no model in the loop; `--predictor agent` runs the real thing.
 """
 
 from __future__ import annotations

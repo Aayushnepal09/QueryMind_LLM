@@ -209,3 +209,6 @@ results/.labels_cache.json
 
 # fitted confidence model (binary, regenerate with scripts/analyze.py)
 results/confidence-model*.pkl
+
+# Working notes, not part of the published project
+.private/

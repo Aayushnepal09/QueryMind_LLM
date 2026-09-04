@@ -1,21 +1,44 @@
-MIT License
+Copyright (c) 2026 Aayush Nepal. All rights reserved.
 
-Copyright (c) 2026 Aayush Nepal
+This source code is made publicly viewable for the purposes of evaluation,
+review, and portfolio assessment only.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+PERMITTED WITHOUT PRIOR PERMISSION
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+  - Viewing and reading this repository.
+  - Cloning it locally for the sole purpose of reading or evaluating the work.
+  - Referencing it in a review, assessment, or hiring decision.
+
+REQUIRES PRIOR WRITTEN PERMISSION FROM THE COPYRIGHT HOLDER
+
+  - Using any part of this software, in whole or in part, in any project,
+    product, or service, whether commercial or non-commercial.
+  - Copying, modifying, adapting, translating, or creating derivative works.
+  - Redistributing, publishing, sublicensing, or selling any part of it.
+  - Using it, or any derivative of it, to train or fine-tune a machine
+    learning model.
+  - Incorporating its methods, prompts, evaluation design, or documentation
+    into other work.
+
+To request permission, contact the copyright holder through the GitHub profile
+associated with this repository. Permission is often granted for academic and
+non-commercial use; the requirement exists so that use is known, not to prevent
+it.
+
+THIRD-PARTY COMPONENTS
+
+  - third_party/evaluation.py is the official BIRD-SQL evaluation script,
+    obtained from the BIRD-SQL project and redistributed under its own terms.
+    It is not covered by this license.
+  - The BIRD-SQL benchmark data is not included in this repository and is
+    subject to the licence published by its authors.
+  - Dependencies declared in pyproject.toml remain under their own licences.
+
+NO WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

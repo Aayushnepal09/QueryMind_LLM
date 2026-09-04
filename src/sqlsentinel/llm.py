@@ -1,6 +1,6 @@
 """Provider-agnostic LLM interface with an on-disk response cache.
 
-CLAUDE.md section 5 wants one thin abstraction over at least two providers so
+spec §5 wants one thin abstraction over at least two providers so
 they can be compared (section 13: pick on cost-per-correct-answer, not raw
 accuracy). Both providers here are free:
 
@@ -13,7 +13,7 @@ The cache is not an optimisation, it is the budget. At ~10 tok/s locally a
 500-question run at k=5 is hours of wall-clock; without caching every re-run of
 an unchanged config pays that again. Keyed on
 (provider, model, system, user, temperature, sample_index) exactly as
-CLAUDE.md section 8 specifies -- sample_index is what keeps the k samples of a
+spec §8 specifies -- sample_index is what keeps the k samples of a
 self-consistency draw distinct instead of collapsing into one cached entry.
 """
 

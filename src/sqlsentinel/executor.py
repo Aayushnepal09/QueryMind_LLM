@@ -1,6 +1,6 @@
 """Read-only SQL execution behind a dialect boundary.
 
-CLAUDE.md section 4: read-only, hard timeout, dialect-agnostic interface with
+spec §4: read-only, hard timeout, dialect-agnostic interface with
 SQLite and Postgres implementations. BIRD ships SQLite; QueryMind's retained
 path is Postgres.
 
@@ -64,7 +64,7 @@ class ExecutionResult:
     def normalized(self) -> frozenset:
         """Order-insensitive view of the result set, for candidate agreement.
 
-        BIRD scores by set equality, so self-consistency agreement (CLAUDE.md
+        BIRD scores by set equality, so self-consistency agreement (docs/spec.md
         section 6) must compare the same way: row order and column order carry
         no meaning. Cells are stringified because the same value can come back
         as int or float depending on how the query was phrased.

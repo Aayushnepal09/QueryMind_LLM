@@ -1,4 +1,4 @@
-"""MCP server exposing SQLSentinel as tools (CLAUDE.md sections 5 and 8, stretch).
+"""MCP server exposing SQLSentinel as tools (spec §4, stretch goal).
 
     uv run --extra mcp python -m sqlsentinel.mcp_server
 

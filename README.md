@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml/badge.svg?branch=sqlsentinel)](https://github.com/Aayushnepal09/QueryMind_LLM/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-264%20passing-brightgreen)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](pyproject.toml)
 
@@ -233,15 +233,14 @@ Stratified on difficulty × database — `eval_500` matches the population
 distribution to within 0.1 points and covers all 11 databases.
 
 The `calib`/`eval_500` disjointness is the project's most important invariant.
-CLAUDE.md calls training and reporting on the same questions *"the one mistake
+the spec calls training and reporting on the same questions *"the one mistake
 that would invalidate the whole project"*, so it is enforced in code:
 `ConfidenceModel.fit()` takes the evaluation ids as `forbidden_ids` and raises
 on any overlap. It is a guard, not a convention.
 
 Why 500 and not all 1,534: at n=500 the 95% CI is ±4.4 points, enough to support
-the size of delta these techniques actually produce, and a full k=5 run on local
-hardware is an overnight job. The choice and its cost are recorded in
-[PROGRESS.md](PROGRESS.md).
+the size of delta these techniques produce, while a full run at k=5 costs
+several times the compute for a interval only ~2 points tighter.
 
 ---
 
@@ -359,9 +358,9 @@ scoring, an unrequested `LIMIT` turns correct answers into failures.
   that auto-discovered it would have hit prod.
 
 The spec expected more prior art than existed: there was no FastAPI layer, no
-chain-of-thought, no few-shot exemplars, no schema introspection. The Phase 1
-baseline is therefore a genuinely naive zero-shot prompt, which makes the
-subsequent deltas measure real technique rather than re-tuning.
+chain-of-thought, no few-shot exemplars, no schema introspection. The baseline
+is therefore a genuinely naive zero-shot prompt, which makes the subsequent
+deltas measure real technique rather than re-tuning.
 
 ---
 
@@ -421,10 +420,21 @@ tests/                 264 tests, 92% coverage
 
 | | |
 |---|---|
-| [results/RESULTS.md](results/RESULTS.md) | All measured numbers |
-| [PROGRESS.md](PROGRESS.md) | Build log, decisions and their rationale |
+| [results/RESULTS.md](results/RESULTS.md) | Every measured number, generated from the run artifacts |
+| [results/FINDINGS.md](results/FINDINGS.md) | Nine secondary findings the headline number conceals |
+| [results/technique-notes.md](results/technique-notes.md) | Why each technique moved the number, or didn't |
 | [docs/reproducing.md](docs/reproducing.md) | Fresh clone → scored number |
-| [docs/migration-notes.md](docs/migration-notes.md) | QueryMind audit |
-| [docs/failure-taxonomy.md](docs/failure-taxonomy.md) | Failure categories |
-| [docs/resume-bullets.md](docs/resume-bullets.md) | Claims with their sources |
-| [CLAUDE.md](CLAUDE.md) | Project specification |
+| [docs/failure-taxonomy.md](docs/failure-taxonomy.md) | Failure categories, with worked examples |
+| [docs/migration-notes.md](docs/migration-notes.md) | What was kept from QueryMind, and what was found wrong with it |
+| [docs/spec.md](docs/spec.md) | The design specification this was built against |
+
+## Licence
+
+**All rights reserved.** This repository is public so the work can be read and
+evaluated. Using, copying, or modifying any part of it requires prior written
+permission — see [LICENSE](LICENSE). Permission is usually granted for academic
+and non-commercial use; the requirement exists so that use is known, not to
+prevent it.
+
+`third_party/evaluation.py` is BIRD-SQL's official scorer and remains under its
+own terms.

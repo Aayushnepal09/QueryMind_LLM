@@ -1,4 +1,4 @@
-# Stub-predictor floor (Phase 0)
+# Stub-predictor floor
 
 BIRD version `dev_20240627`. Predictor always emits `SELECT 1`.
 
@@ -7,7 +7,7 @@ BIRD version `dev_20240627`. Predictor always emits `SELECT 1`.
 | dev_50 | 50 | 4.0% | ±6.2 |
 | eval_500 | 500 | **3.0%** | ±1.5 |
 
-**The floor is not zero.** CLAUDE.md §8 predicted "~0%". It is ~3%.
+**The floor is not zero.** spec §8 predicted "~0%". It is ~3%.
 
 BIRD's execution-accuracy metric compares result *sets*: a prediction is correct
 when `set(predicted_rows) == set(gold_rows)`. `SELECT 1` returns `{(1,)}`, and a

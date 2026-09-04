@@ -24,7 +24,7 @@ def test_low_confidence_routes_to_review():
     "sql", ["DELETE FROM t", "DROP TABLE t", "UPDATE t SET a=1", "SELECT 1; DROP TABLE t"]
 )
 def test_non_select_always_reviewed_even_at_full_confidence(sql):
-    """Safety rules are not probabilistic (CLAUDE.md section 6)."""
+    """Safety rules are not probabilistic (spec §6)."""
     d = Router(threshold=0.5).route(sql, 1.0)
     assert d.decision is Decision.REVIEW
 

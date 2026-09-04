@@ -1,4 +1,4 @@
-"""Streamlit human-review queue (CLAUDE.md section 8, `feat/review-ui`).
+"""Streamlit human-review queue (spec §3).
 
 Shows the queries the router sent to REVIEW and records what a human decided.
 
@@ -18,7 +18,7 @@ click away. Both audiences act on the same queue and their decisions are logged
 identically -- which is what makes the human-in-the-loop claim real rather than
 decorative.
 
-Deliberately plain visually. CLAUDE.md section 3 lists a polished custom
+Deliberately plain visually. spec §3 lists a polished custom
 front-end as a non-goal; the artifact is the evaluation, not the interface.
 """
 

@@ -3,7 +3,7 @@
 Diagnostics that explain *why* a technique moved the number, recorded alongside
 the number itself. Measured on `dev_50` unless stated.
 
-## Summary: the Phase 2 ablations
+## Summary: the technique ablations
 
 All comparisons are **paired** (McNemar exact, same 50 questions) rather than
 comparisons of independent confidence intervals. The runs share their questions,
@@ -89,7 +89,7 @@ that joins depend on, and a missing bridge table does not produce an error — i
 produces confidently wrong SQL. A silent accuracy loss traded for a visible
 token saving is a bad trade on a benchmark scored by exact result sets.
 
-**Answering CLAUDE.md §13** ("Is schema linking worth it on BIRD's larger
+**Answering spec §13** ("Is schema linking worth it on BIRD's larger
 databases, or does full-schema context win?"): on BIRD *dev*, full-schema context
 wins by default because there is nothing meaningful to prune. Mean schema is
 ~1,230 tokens and the largest is 3,128, so there is no token pressure to relieve
@@ -120,7 +120,7 @@ trust the result. A syntactically valid query returning wrong rows looks exactly
 like success.
 
 It also degrades the confidence signal. `execution_errored` is one of the
-strongest negative features in the scorer (CLAUDE.md §6 lists it as such), and
+strongest negative features in the scorer (spec §6 lists it as such), and
 self-correction is precisely a mechanism for destroying that feature's
 information while leaving the underlying error in place.
 
@@ -195,7 +195,7 @@ model exists to correct.
 **k=3 gives only four possible confidence values** (0, 0.33, 0.67, 1.0), which
 is why the routing curve is a step function with wide flat regions. Any
 threshold in 0.35–0.65 behaves identically. Finer control needs larger k — the
-cost/granularity trade-off CLAUDE.md §13 asks about, now with a concrete answer:
+cost/granularity trade-off spec §13 asks about, now with a concrete answer:
 k=3 is enough to separate risk into four useful bands, and not enough to tune a
 threshold precisely.
 
@@ -338,7 +338,7 @@ and calibration costs one model fit rather than 5/3× the generation budget.
 
 # Provider comparison — blocked, and the blockage is the answer
 
-CLAUDE.md §13 asks: *"Which model as primary? Run Phase 1 against two and pick
+The spec asks: *"Which model as primary? Run against two and pick
 on cost-per-correct-answer, not raw accuracy."*
 
 **The accuracy half of that comparison could not be completed.** A 50-question
@@ -386,7 +386,7 @@ itself.
 
 # Does QueryMind's prompt engineering do anything?
 
-CLAUDE.md §13: *"Does QueryMind's existing prompting beat a naive baseline on
+spec §13: *"Does QueryMind's existing prompting beat a naive baseline on
 BIRD? Worth knowing and reporting either way."*
 
 The ported prompt carries eight numbered requirements, explicit join-path

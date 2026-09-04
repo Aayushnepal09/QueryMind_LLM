@@ -16,7 +16,7 @@ def test_fence_without_language_tag():
 
 
 def test_prose_before_fence():
-    """The exact shape qwen2.5-coder produced on 2026-09-03."""
+    """The exact shape qwen2.5-coder produced in practice."""
     raw = (
         "To calculate the total revenue per product, you can use the following query:\n\n"
         "```sql\nSELECT p.name, SUM(o.qty) AS total\nFROM orders o\n"

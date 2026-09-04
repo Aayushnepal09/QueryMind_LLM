@@ -21,7 +21,7 @@ def test_sizes(splits):
 
 
 def test_no_leakage_between_calib_and_eval(splits):
-    """The invariant CLAUDE.md calls out as project-invalidating if broken."""
+    """The invariant the spec calls out as project-invalidating if broken."""
     assert not set(splits["calib"]) & set(splits["eval_500"])
 
 

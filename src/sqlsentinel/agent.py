@@ -1,14 +1,13 @@
 """The text-to-SQL agent.
 
-Phase 1 is the single-shot baseline: full schema, one sample, temperature 0, no
-retrieval, no correction. Every Phase 2 technique is a flag on top of it, so
-each can be enabled alone and its delta measured against the same baseline
-(CLAUDE.md section 8: "one branch per technique, measure after each").
+The baseline is single-shot: full schema, one sample, temperature 0, no
+retrieval, no correction. Every technique is a flag on top of it, so each can
+be enabled alone and its delta measured against the same baseline.
 
     few_shot        retrieve similar calibration questions as exemplars
     prune_schema    drop tables the question plausibly does not need
     max_corrections re-prompt with the execution error, capped at 2 rounds
-    k               generate k candidates for self-consistency (Phase 3)
+    k               generate k candidates for self-consistency
 """
 
 from __future__ import annotations
@@ -38,7 +37,7 @@ Return ONLY the corrected SQL."""
 
 @dataclass
 class AgentTrace:
-    """Per-question record. Phase 4 turns this into OpenTelemetry spans."""
+    """Per-question record. Also what the OpenTelemetry spans carry."""
 
     question_id: int
     db_id: str
@@ -206,5 +205,5 @@ class Agent:
         }
 
 
-# Backwards-compatible alias: Phase 1 shipped this name.
+# Alias kept for the single-shot configuration.
 BaselineAgent = Agent

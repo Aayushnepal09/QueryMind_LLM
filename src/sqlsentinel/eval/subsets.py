@@ -1,6 +1,6 @@
 """Deterministic, stratified BIRD dev-set splits.
 
-Design rationale (see PROGRESS.md "Locked decisions"):
+Design rationale:
 
 BIRD dev has 1,534 questions. We do not report on all of them -- a full run at
 k=5 is an overnight job on the target hardware. Instead we fix three splits,
@@ -11,10 +11,10 @@ seeded and committed, so every run in the project is comparable:
                  fitted on these questions.
     dev_50    -- a subset of eval_500 for the fast development loop.
     calib     -- the remaining 1,034 questions, used ONLY to fit the confidence
-                 classifier (CLAUDE.md section 6).
+                 classifier (spec §6).
 
 The calib/eval_500 split is disjoint by construction. This is what enforces
-CLAUDE.md's "never train and evaluate the confidence model on the same
+docs/spec.md's "never train and evaluate the confidence model on the same
 questions" -- the one mistake that would invalidate the project.
 """
 

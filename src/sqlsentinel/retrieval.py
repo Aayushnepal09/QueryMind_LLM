@@ -1,4 +1,4 @@
-"""Few-shot exemplar retrieval (Phase 2, `feat/few-shot-retrieval`).
+"""Few-shot exemplar retrieval.
 
 QueryMind had no exemplars at all, so this starts from nothing rather than
 porting anything.
@@ -80,7 +80,7 @@ class ExemplarStore:
         `exclude_question_id` drops the query's own record from the pool.
         **This is a leakage guard, not a nicety.** Scoring a question that is
         itself in the exemplar pool retrieves it at similarity 1.0 and hands the
-        model its own gold SQL: measured at +23.5 points of pure contamination
+        model its own gold SQL: measured at 24.5 points of pure contamination
         on the calibration split before this was added.
         """
         idx = range(len(self.records))

@@ -1,4 +1,4 @@
-"""OpenTelemetry tracing (CLAUDE.md section 4, `feat/observability`).
+"""OpenTelemetry tracing (spec §3).
 
 Spans for schema linking, each generation sample, each execution, scoring and
 routing, carrying cost and latency per query.

@@ -1,4 +1,4 @@
-"""FastAPI service (CLAUDE.md section 4, `feat/api-rewrite`).
+"""FastAPI service (spec §3).
 
 QueryMind had no API layer -- this is a build, not a rewrite (see
 docs/migration-notes.md). The surface is shaped around the agent contract

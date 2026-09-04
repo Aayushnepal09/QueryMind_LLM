@@ -1,6 +1,6 @@
 """Risk-based routing: auto-execute or send to human review.
 
-CLAUDE.md section 6. Two independent gates:
+spec §6. Two independent gates:
 
   * Risk overrides -- deterministic rules that force REVIEW regardless of
     confidence. Safety is not probabilistic: a DELETE does not become safe
@@ -84,7 +84,7 @@ class Router:
 
 
 def routing_curve(confidences, correct, thresholds=None) -> list[dict]:
-    """The money metric (CLAUDE.md section 6).
+    """The money metric (spec §6).
 
     For each threshold: what fraction of queries go to review, and what
     fraction of all incorrect queries that catches. "Routed 20% and caught 60%

@@ -149,12 +149,12 @@ disable the conversion:
 MSYS_NO_PATHCONV=1 docker run -v "//c/path/to/repo/data:/app/data:ro" ...
 ```
 
-Verified working configuration (2026-09-04): image builds clean, container
+Verified working configuration: image builds clean, container
 serves `/health` with all 11 databases visible, and `POST /query` returns
 correct SQL executed against the mounted benchmark, reaching Ollama on the host
 GPU via `host.docker.internal`.
 
-## Fresh-clone verification (2026-09-04)
+## Fresh-clone verification
 
 Cloned to an empty directory and installed from scratch:
 
