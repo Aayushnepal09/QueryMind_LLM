@@ -326,11 +326,23 @@ univariate predictor is not automatically a useful feature.**
 
 ### A redundancy bug in my own feature set
 
-`has_subquery` and `has_nested_select` correlate at **r = 1.0000** on this data —
-they are the same feature computed two ways (`(SELECT` versus counting the
-occurrences of `SELECT`). Their single-feature Brier and ECE are identical to
-four decimal places. One of them is dead weight, and it went unnoticed until
-this ablation because nothing in the pipeline checks for collinearity.
+`has_subquery` and `has_nested_select` correlated at **r = 1.0000** on this data —
+they were the same feature computed two ways (`(SELECT` versus counting the
+occurrences of `SELECT`). Their single-feature Brier and ECE were identical to
+four decimal places. One was dead weight, and it went unnoticed until this
+ablation because nothing in the pipeline checked for collinearity.
+
+**Fixed:** `has_nested_select` now means a second SELECT that is *not* a
+parenthesised subquery — a set operation or CTE — so the two flags describe
+different structures. A regression test asserts no pair of features exceeds
+r = 0.999.
+
+Worth stating plainly: **the fix did not improve the model.** Brier stayed at
+0.1943 and ECE moved from 0.0507 to 0.0499, which is noise. That is the expected
+result — a perfectly redundant feature contributes nothing, so removing the
+redundancy cannot recover anything. What the fix buys is that the feature now
+measures something real, so future ablations are interpretable. Reporting it as
+a performance win would be inventing a result.
 
 ### What a smaller model does
 

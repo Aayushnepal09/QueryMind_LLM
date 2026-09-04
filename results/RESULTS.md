@@ -38,7 +38,7 @@ Paired (exact McNemar, same questions): **+5.0 points**, 61 fixed, 36 broken, p 
 | Scorer | n | Brier ↓ | ECE ↓ | base accuracy |
 |---|---:|---:|---:|---:|
 | k3-eval200 v1 (agreement only) | 200 | **0.2622** | 0.2033 | 55.0% |
-| k3-eval200 v2 (calibrated, 200 calibration questions) | 200 | **0.1943** | 0.0507 | 55.0% |
+| k3-eval200 v2 (calibrated, 200 calibration questions) | 200 | **0.1943** | 0.0499 | 55.0% |
 
 Single-sample runs, shown as a control:
 
@@ -62,7 +62,7 @@ Reliability diagrams: `results/calibration-*.png`
 | 0.25 | 12% | 24% | 61.4% | 2.04× |
 | 0.30 | 14% | 29% | 62.6% | 1.99× |
 | 0.35 | 16% | 33% | 64.1% | 2.02× |
-| 0.40 | 27% | 47% | 67.1% | 1.73× |
+| 0.40 | 28% | 47% | 66.9% | 1.70× |
 | 0.45 | 32% | 51% | 67.6% | 1.60× |
 | 0.50 | 34% | 54% | 69.2% | 1.63× |
 | 0.55 | 38% | 58% | 69.4% | 1.52× |

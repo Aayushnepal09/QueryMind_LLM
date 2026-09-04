@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from sqlsentinel.confidence import (
+    FEATURE_NAMES,
     ConfidenceModel,
     QueryFeatures,
     agreement_confidence,
@@ -27,7 +28,9 @@ def test_features_detect_sql_structure():
     f = extract_features(t, "how many?", "hint", n_schema_tables=5)
     assert f.has_aggregation == 1.0
     assert f.has_subquery == 1.0
-    assert f.has_nested_select == 1.0
+    # not a "nested select": that flag now means a second SELECT which is *not*
+    # a parenthesised subquery, so the two features stop being duplicates
+    assert f.has_nested_select == 0.0
     assert f.n_joins == 1.0
     assert f.n_tables_referenced == 3.0
     assert f.evidence_provided == 1.0
@@ -122,3 +125,69 @@ def test_reliability_curve_bins_sum_to_n():
     probs = np.linspace(0, 1, 100)
     correct = (probs > 0.5).astype(int)
     assert sum(b["count"] for b in reliability_curve(probs, correct)) == 100
+
+
+# ---------------------------------------------------------------- collinearity
+
+
+def test_subquery_and_nested_select_are_distinct_features():
+    """Regression: these correlated at r=1.0000 (FINDINGS section 9).
+
+    Both were answering "does SELECT appear more than once", making one of the
+    14 features dead weight. has_nested_select now covers the case
+    has_subquery does not: a second SELECT that is not a parenthesised
+    subquery, i.e. a set operation or CTE.
+    """
+    sub = extract_features(
+        FakeTrace(sql="SELECT a FROM t WHERE b IN (SELECT c FROM u)"), "q", "", 3
+    )
+    assert sub.has_subquery == 1.0
+    assert sub.has_nested_select == 0.0
+
+    union = extract_features(FakeTrace(sql="SELECT a FROM t UNION SELECT a FROM u"), "q", "", 3)
+    assert union.has_subquery == 0.0
+    assert union.has_nested_select == 1.0
+
+    plain = extract_features(FakeTrace(sql="SELECT a FROM t"), "q", "", 3)
+    assert plain.has_subquery == 0.0
+    assert plain.has_nested_select == 0.0
+
+
+def test_no_two_features_are_perfectly_collinear():
+    """Nothing in the pipeline checked this, and a duplicate slipped through."""
+    import itertools
+
+    import numpy as np
+
+    rng = np.random.default_rng(0)
+    # Chosen so each structural property varies independently of the others.
+    # A fixture where, say, every subquery also has a JOIN produces incidental
+    # collinearity and would fail this test without any design flaw existing.
+    sqls = [
+        "SELECT a FROM t",
+        "SELECT COUNT(*) FROM t WHERE x='y'",
+        "SELECT a FROM t JOIN u ON 1=1",  # join, no subquery
+        "SELECT a FROM t WHERE b IN (SELECT c FROM v)",  # subquery, no join
+        "SELECT a FROM t JOIN u ON 1=1 WHERE b IN (SELECT c FROM v)",  # both
+        "SELECT a FROM t UNION SELECT a FROM u",  # set operation
+        "SELECT AVG(p) FROM t GROUP BY q",  # aggregate only
+        "SELECT a, b, c FROM t ORDER BY a LIMIT 5",  # projection only
+        "SELECT COUNT(*) FROM t JOIN u ON 1=1 JOIN v ON 1=1",  # two joins
+    ]
+    feats = []
+    for i, s in enumerate(sqls):
+        feats.append(
+            extract_features(
+                FakeTrace(sql=s, agreement_rate=rng.uniform(), rows=int(rng.integers(0, 20))),
+                "a question of some length here",
+                "evidence" if i % 2 else "",
+                n_schema_tables=3 + i,
+            ).vector()
+        )
+    X = np.array(feats)
+    for i, j in itertools.combinations(range(X.shape[1]), 2):
+        a, b = X[:, i], X[:, j]
+        if a.std() == 0 or b.std() == 0:
+            continue
+        r = abs(np.corrcoef(a, b)[0, 1])
+        assert r < 0.999, f"{FEATURE_NAMES[i]} and {FEATURE_NAMES[j]} collinear at r={r:.4f}"

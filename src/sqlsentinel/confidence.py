@@ -80,7 +80,11 @@ def extract_features(trace, question: str, evidence: str, n_schema_tables: int) 
         n_tables_referenced=float(len(tables)),
         has_aggregation=float(bool(_AGG.search(sql))),
         has_subquery=float(bool(_SUBQ.search(sql))),
-        has_nested_select=float(sql.upper().count("SELECT") > 1),
+        # Counts SELECTs that are *not* parenthesised subqueries -- set
+        # operations (UNION/INTERSECT/EXCEPT) and CTEs. Measured at r=1.0000
+        # with has_subquery before this was distinguished (FINDINGS section 9):
+        # both were answering "does SELECT appear more than once".
+        has_nested_select=float(sql.upper().count("SELECT") > 1 and not bool(_SUBQ.search(sql))),
         execution_errored=float(trace.execution_errored_pre_correction),
         n_correction_rounds=float(trace.n_correction_rounds),
         result_row_count_log=float(np.log1p(max(trace.result_row_count, 0))),

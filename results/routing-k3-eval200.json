@@ -74,12 +74,12 @@
     },
     {
       "threshold": 0.4,
-      "pct_routed": 27.0,
+      "pct_routed": 27.5,
       "pct_errors_caught": 46.666666666666664,
-      "n_routed": 54,
+      "n_routed": 55,
       "errors_caught": 42,
-      "auto_accuracy": 67.12328767123287,
-      "n_auto": 146
+      "auto_accuracy": 66.89655172413794,
+      "n_auto": 145
     },
     {
       "threshold": 0.45,
