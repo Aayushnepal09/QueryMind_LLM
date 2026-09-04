@@ -10,11 +10,22 @@
 
 ## Current state
 
-**Phases 0–4: code COMPLETE.** Phase 5 blocked only on long-running eval sweeps.
-**Active branch:** `feat/baseline-agent` (off `sqlsentinel`)
-**Tests:** 124 passing, ruff clean.
-**Running:** `bash scripts/run_experiments.sh` — 11 sequential runs, ~14–16 h total.
-Re-running it is safe and resumes from cache; it skips any run whose traces exist.
+**All phases COMPLETE** except the v2 calibrated confidence model, which waits
+on one running job.
+**Active branch:** `chore/cleanup` (merged into `sqlsentinel`, pushed to origin)
+**Tests:** 196 passing, ruff clean and formatted.
+**Running:** clean `k3-calib200` re-run (600 generations). When it finishes:
+
+```bash
+uv run python scripts/analyze.py results/traces/k3-eval200.json --label k3-eval200   --calib-traces results/traces/k3-calib200.json   # fits and reports v2
+uv run python scripts/compare.py --baseline baseline-eval500
+uv run python scripts/research.py
+uv run python scripts/build_report.py
+```
+
+**Verified working:** Docker build + container serving `/query` end to end;
+Streamlit review UI in both modes; force-push of the purged history; the
+official BIRD harness against gold SQL at 100%.
 **Integration branch `sqlsentinel`:** created locally, **not yet pushed**
 **Hardware:** GTX 1660 Ti (6 GB VRAM), 15.8 GB RAM — relevant to the local-LLM decision below
 
@@ -78,7 +89,12 @@ Existing repo contents at `main` (commit `1e90f3c`):
 |---|---|---|---|---|---|---|
 | 2026-09-03 | stub (`SELECT 1`) | dev_50 | 50 | 4.0% | ±6.2 | 1.3 s |
 | 2026-09-03 | stub (`SELECT 1`) | eval_500 | 500 | **3.0%** | ±1.5 | 37.8 s |
-| 2026-09-03 | baseline, qwen2.5-coder:7b | dev_50 | 50 | **62.0%** | ±13.0 | 1.3 s |
+| 2026-09-03 | baseline, qwen2.5-coder:7b | dev_50 | 50 | 62.0% | ±13.0 | 1.3 s |
+| 2026-09-04 | **baseline** (the "before") | eval_500 | 500 | **45.6%** | ±4.3 | — |
+| 2026-09-04 | **final** few-shot + self-correct | eval_500 | 500 | **50.4%** | ±4.4 | — |
+| 2026-09-04 | k=3 self-consistency | eval_500 subset | 200 | **55.0%** | ±6.8 | — |
+
+Paired: final **+4.8 pts p=0.014**; k=3 **+9.0 pts p=0.008**. Both significant.
 
 **The chance floor is ~3%, not 0%** — `SELECT 1` returns `{(1,)}` and some gold
 queries legitimately return a scalar 1 under set-equality scoring. Read every
@@ -97,6 +113,24 @@ accuracy against a 3% floor. See `results/baseline-floor.md`.
 *Reporting rule:* always report accuracy **with its confidence interval and n** (e.g. "58.2% ± 4.4%, n=500"). Never quote a bare number. The subset must be seeded and its question ids committed to `results/` so runs are comparable.
 
 *Deviation from CLAUDE.md:* spec §8 implies full-dev-set runs in Phases 1-2. We substitute the 500-question stratified subset. Note this in the README.
+
+## Traps that cost time — do not repeat
+
+1. **`--predictor` defaults to `stub`.** Omitting it in a script produces a
+   chance-floor score (2.5%) instead of an error. Cost one wasted run.
+2. **Few-shot retrieval leaked** until `exclude_question_id` was added: a
+   question evaluated on `calib` retrieved itself at similarity 1.0. Worth 23.5
+   points. Guarded and regression-tested now.
+3. **Per-question labelling must use the official scorer's execution budget**
+   (30 s, no row cap), not the agent's (5 s, 5,000 rows). Caused a 3-question
+   drift; `analyze.py` now hard-fails on any disagreement.
+4. **Git Bash rewrites container paths.** `docker run -v /app/data` becomes
+   `C:/Program Files/Git/app/data` and the API reports healthy with zero
+   databases. Use `docker compose`, or `MSYS_NO_PATHCONV=1`.
+5. **Emoji and typographic characters crash the cp1252 console.** Keep script
+   stdout ASCII; Unicode is fine in files and in Streamlit.
+6. **Editing a running bash script corrupts it** — bash reads incrementally.
+   Queue follow-up work in a separate script.
 
 ## Measured facts worth not re-deriving
 
