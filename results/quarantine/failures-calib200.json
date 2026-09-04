@@ -1,0 +1,413 @@
+{
+  "n_failures": 43,
+  "n_total": 200,
+  "distribution": {
+    "join_path_error": 12,
+    "other": 12,
+    "wrong_columns": 5,
+    "execution_error": 5,
+    "aggregation_error": 4,
+    "value_matching": 3,
+    "empty_result": 2
+  },
+  "definitions": {
+    "empty_prediction": "No SQL was produced at all",
+    "execution_error": "SQL was syntactically or semantically invalid",
+    "wrong_columns": "Right rows, wrong columns returned",
+    "empty_result": "Query ran but returned no rows where gold returns some",
+    "aggregation_error": "Aggregation or grouping differs from gold",
+    "join_path_error": "Different set of tables joined than gold",
+    "value_matching": "Filters on a literal that does not match the stored value",
+    "ordering_or_limit": "Differs only in ORDER BY / LIMIT",
+    "other": "Incorrect for a reason not automatically classifiable"
+  },
+  "failures": [
+    {
+      "question_id": 231,
+      "db_id": "toxicology",
+      "difficulty": "challenging",
+      "category": "join_path_error",
+      "question": "Which bond type accounted for the majority of the bonds found in molecule TR010 and state whether or not this molecule is carcinogenic?",
+      "predicted_sql": "SELECT T.bond_type, IIF(T2.label = '+', 'YES', 'NO') AS flag_carcinogenic FROM ( SELECT T1.bond_type, COUNT(T1.molecule_id) FROM bond AS T1 WHERE T1.molecule_id = 'TR010' GROUP BY T1.bond_type ORDER BY COUNT(T1.molecule_id) DESC LIMIT 1 ) AS T INNER JOIN molecule AS T2 ON T2.molecule_id = 'TR010'",
+      "gold_sql": "SELECT T.bond_type FROM ( SELECT T1.bond_type, COUNT(T1.molecule_id) FROM bond AS T1  WHERE T1.molecule_id = 'TR010' GROUP BY T1.bond_type ORDER BY COUNT(T1.molecule_id) DESC LIMIT 1 ) AS T"
+    },
+    {
+      "question_id": 309,
+      "db_id": "toxicology",
+      "difficulty": "simple",
+      "category": "wrong_columns",
+      "question": "List out the atom id that belongs to the TR346 molecule and how many bond type can be created by this molecule?",
+      "predicted_sql": "SELECT T1.atom_id, COUNT(DISTINCT T2.bond_type) FROM atom AS T1 INNER JOIN bond AS T2 ON T1.molecule_id = T2.molecule_id WHERE T1.molecule_id = 'TR346' GROUP BY T1.atom_id, T2.bond_type",
+      "gold_sql": "SELECT T1.atom_id, COUNT(DISTINCT T2.bond_type),T1.molecule_id FROM atom AS T1 INNER JOIN bond AS T2 ON T1.molecule_id = T2.molecule_id WHERE T1.molecule_id = 'TR000' GROUP BY T1.atom_id, T2.bond_type"
+    },
+    {
+      "question_id": 365,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "value_matching",
+      "question": "What is the type of card \"Benalish Knight\"?",
+      "predicted_sql": "SELECT DISTINCT T1.type FROM cards AS T1 JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T2.name = 'Benalish Knight'",
+      "gold_sql": "SELECT DISTINCT T1.type FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T1.name = 'Benalish Knight'"
+    },
+    {
+      "question_id": 378,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "other",
+      "question": "What are the foiled cards that are incredibly powerful when paired with non foiled cards? List the IDs.",
+      "predicted_sql": "SELECT uuid FROM cards WHERE cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL",
+      "gold_sql": "SELECT id FROM cards WHERE cardKingdomId IS NOT NULL AND cardKingdomFoilId IS NOT NULL"
+    },
+    {
+      "question_id": 386,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "wrong_columns",
+      "question": "How many cards are having future frame version and what are the legality status of these cards?",
+      "predicted_sql": "SELECT COUNT(cards.uuid) AS card_count, legalities.status FROM cards JOIN legalities ON cards.uuid = legalities.uuid WHERE cards.frameVersion = 'future' AND legalities.status = 'legal'",
+      "gold_sql": "SELECT COUNT(T1.id) FROM cards AS T1 INNER JOIN legalities AS T2 ON T1.uuid = T2.uuid WHERE T1.frameVersion = 'future'"
+    },
+    {
+      "question_id": 387,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "other",
+      "question": "What are the cards for set OGW? State the colour for these cards.",
+      "predicted_sql": "SELECT DISTINCT c.name, c.colorIdentity FROM cards c JOIN set_translations st ON c.setCode = st.setCode WHERE st.setCode = 'OGW'",
+      "gold_sql": "SELECT id, colors FROM cards WHERE id IN ( SELECT id FROM set_translations WHERE setCode = 'OGW' )"
+    },
+    {
+      "question_id": 388,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "join_path_error",
+      "question": "What are the cards in set 10E with converted mana of 5 have translation and what are the languages?",
+      "predicted_sql": "SELECT card.name, card.manaCost, translation.translation, translation.language FROM cards card JOIN foreign_data fd ON card.uuid = fd.uuid JOIN set_translations translation ON translation.setCode = card.setCode WHERE card.setCode = '10E' AND card.manaCost = '5'",
+      "gold_sql": "SELECT id, language FROM set_translations WHERE id = ( SELECT id FROM cards WHERE convertedManaCost = 5 ) AND setCode = '10E'"
+    },
+    {
+      "question_id": 389,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "aggregation_error",
+      "question": "List down the name of cards with original types of Creature - Elf and the date of rulings for these cards.",
+      "predicted_sql": "SELECT cards.name, MIN(rulings.date) AS first_ruling_date FROM cards JOIN rulings ON cards.uuid = rulings.uuid WHERE cards.originalType = 'Creature - Elf' GROUP BY cards.name",
+      "gold_sql": "SELECT T1.id, T2.date FROM cards AS T1 INNER JOIN rulings AS T2 ON T1.uuid = T2.uuid WHERE T1.originalType = 'Creature - Elf'"
+    },
+    {
+      "question_id": 405,
+      "db_id": "card_games",
+      "difficulty": "moderate",
+      "category": "other",
+      "question": "How many Brazilian Portuguese translated sets are inside the Commander block?",
+      "predicted_sql": "SELECT COUNT(*) FROM sets JOIN set_translations ON sets.code = set_translations.setCode WHERE sets.block = 'Commander' AND set_translations.language = 'Portuguese (Brasil)'",
+      "gold_sql": "SELECT COUNT(T1.id) FROM sets AS T1 INNER JOIN set_translations AS T2 ON T1.code = T2.setCode WHERE T2.language = 'Portuguese (Brazil)' AND T1.block = 'Commander'"
+    },
+    {
+      "question_id": 408,
+      "db_id": "card_games",
+      "difficulty": "moderate",
+      "category": "join_path_error",
+      "question": "How many unknown power cards contain info about the triggered ability",
+      "predicted_sql": "SELECT COUNT(*) FROM cards JOIN foreign_data ON cards.uuid = foreign_data.uuid WHERE (cards.power IS NULL OR cards.power = '*') AND foreign_data.text LIKE '%triggered ability%'",
+      "gold_sql": "SELECT T2.text FROM cards AS T1 INNER JOIN rulings AS T2 ON T1.uuid = T2.uuid WHERE (T1.power IS NULL OR T1.power = '*') AND T2.text LIKE '%triggered ability%'"
+    },
+    {
+      "question_id": 411,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "empty_result",
+      "question": "To which artist does the card with the text \"Das perfekte Gegenmittel zu einer dichten Formation\" belong?",
+      "predicted_sql": "SELECT T1.artist FROM cards AS T1 JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T2.text LIKE '%Das perfekte Gegenmittel zu einer dichten Formation%'",
+      "gold_sql": "SELECT DISTINCT T1.artist FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T2.flavorText LIKE '%DAS perfekte Gegenmittel zu einer dichten Formation%'"
+    },
+    {
+      "question_id": 412,
+      "db_id": "card_games",
+      "difficulty": "moderate",
+      "category": "value_matching",
+      "question": "What is the foreign name of the card in French of type Creature, normal layout and black border color, by artist Matthew D. Wilson?",
+      "predicted_sql": "SELECT T2.name FROM cards AS T1 JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T1.type = 'Creature' AND T1.layout = 'normal' AND T1.borderColor = 'black' AND T2.language = 'French' AND T1.artist = 'Matthew D. Wilson'",
+      "gold_sql": "SELECT name FROM foreign_data WHERE uuid IN ( SELECT uuid FROM cards WHERE types = 'Creature' AND layout = 'normal' AND borderColor = 'black' AND artist = 'Matthew D. Wilson' ) AND language = 'French'"
+    },
+    {
+      "question_id": 426,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "wrong_columns",
+      "question": "Please provide top three sets that don't appear in Magic: The Gathering Online, along with their names in in alphabetical order.",
+      "predicted_sql": "SELECT s.code, s.name FROM sets s WHERE s.mtgoCode IS NULL OR s.mtgoCode = '' ORDER BY s.name ASC LIMIT 3",
+      "gold_sql": "SELECT name FROM sets WHERE mtgoCode IS NULL ORDER BY name LIMIT 3"
+    },
+    {
+      "question_id": 459,
+      "db_id": "card_games",
+      "difficulty": "moderate",
+      "category": "join_path_error",
+      "question": "Which card costs more converted mana, \"Serra Angel\" or \"Shrine Keeper\"?",
+      "predicted_sql": "SELECT cd.uuid, cd.name, cd.convertedManaCost FROM cards cd JOIN foreign_data fd ON cd.uuid = fd.uuid WHERE fd.name IN ('Serra Angel', 'Shrine Keeper') ORDER BY cd.convertedManaCost DESC LIMIT 1",
+      "gold_sql": "SELECT name FROM cards WHERE name IN ('Serra Angel', 'Shrine Keeper') ORDER BY convertedManaCost DESC LIMIT 1"
+    },
+    {
+      "question_id": 463,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "join_path_error",
+      "question": "How many translations are there for the set of cards with \"Angel of Mercy\" in it?",
+      "predicted_sql": "SELECT COUNT(DISTINCT set_translations.id) AS translation_count FROM foreign_data JOIN cards ON foreign_data.uuid = cards.uuid JOIN set_translations ON set_translations.setCode = cards.setCode WHERE foreign_data.name = 'Angel of Mercy'",
+      "gold_sql": "SELECT COUNT(DISTINCT translation) FROM set_translations WHERE setCode IN ( SELECT setCode FROM cards WHERE name = 'Angel of Mercy' ) AND translation IS NOT NULL"
+    },
+    {
+      "question_id": 466,
+      "db_id": "card_games",
+      "difficulty": "moderate",
+      "category": "join_path_error",
+      "question": "Among the cards in the set \"Hauptset Zehnte Edition\", how many of them are designed by Adam Rex?",
+      "predicted_sql": "SELECT COUNT(DISTINCT T1.uuid) FROM cards AS T1 JOIN set_translations AS T2 ON T1.uuid IN (SELECT uuid FROM foreign_data WHERE text LIKE '%Hauptset Zehnte Edition%') WHERE T2.translation = 'Hauptset Zehnte Edition' AND T1.artist = 'Adam Rex'",
+      "gold_sql": "SELECT COUNT(T1.id) FROM cards AS T1 INNER JOIN set_translations AS T2 ON T2.setCode = T1.setCode WHERE T2.translation = 'Hauptset Zehnte Edition' AND T1.artist = 'Adam Rex'"
+    },
+    {
+      "question_id": 470,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "aggregation_error",
+      "question": "When was the set of cards with \"Ancestor's Chosen\" released?",
+      "predicted_sql": "SELECT MIN(sets.releaseDate) AS releaseDate FROM sets JOIN cards ON sets.code = cards.setCode WHERE cards.name = 'Ancestor''s Chosen'",
+      "gold_sql": "SELECT DISTINCT T2.releaseDate FROM cards AS T1 INNER JOIN sets AS T2 ON T2.code = T1.setCode WHERE T1.name = 'Ancestor''s Chosen'"
+    },
+    {
+      "question_id": 476,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "other",
+      "question": "Please list the name of the cards in the set Coldsnap with the highest converted mana cost.",
+      "predicted_sql": "SELECT c.name FROM cards c JOIN sets s ON c.setCode = s.code WHERE s.name = 'Coldsnap' ORDER BY c.convertedManaCost DESC",
+      "gold_sql": "SELECT T1.name FROM cards AS T1 INNER JOIN sets AS T2 ON T2.code = T1.setCode WHERE T2.name = 'Coldsnap' ORDER BY T1.convertedManaCost DESC LIMIT 1"
+    },
+    {
+      "question_id": 512,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "join_path_error",
+      "question": "How many cards with unknown power that can't be found in foil is in duel deck A?",
+      "predicted_sql": "SELECT COUNT(*) FROM cards JOIN legalities ON cards.uuid = legalities.uuid WHERE legalities.format = 'duel' AND legalities.status = 'Legal' AND cards.hasFoil = 0 AND (cards.power IS NULL OR cards.power = '*')",
+      "gold_sql": "SELECT SUM(CASE WHEN power = '*' OR power IS NULL THEN 1 ELSE 0 END) FROM cards WHERE hasFoil = 0 AND duelDeck = 'a'"
+    },
+    {
+      "question_id": 513,
+      "db_id": "card_games",
+      "difficulty": "challenging",
+      "category": "join_path_error",
+      "question": "Among the sets whose expansion type is Commander, which set has the highest total number of cards including promotional and related supplemental products but excluding Alchemy modifications? Indicate the id of the set.",
+      "predicted_sql": "SELECT s.id FROM sets s JOIN legalities l ON s.code = l.uuid WHERE s.type = 'commander' GROUP BY s.id ORDER BY s.totalSetSize DESC LIMIT 1",
+      "gold_sql": "SELECT id FROM sets WHERE type = 'commander' ORDER BY totalSetSize DESC LIMIT 1"
+    },
+    {
+      "question_id": 516,
+      "db_id": "card_games",
+      "difficulty": "moderate",
+      "category": "join_path_error",
+      "question": "How many cards did Volkan Ba\u00c7\u00b5a illustrated whose foreign language is in French?",
+      "predicted_sql": "SELECT COUNT(*) FROM cards JOIN foreign_data ON cards.uuid = foreign_data.uuid JOIN set_translations ON cards.setCode = set_translations.setCode WHERE foreign_data.language = 'French' AND cards.artist = 'Volkan Ba\u01f5a'",
+      "gold_sql": "SELECT COUNT(T3.id) FROM ( SELECT T1.id FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T2.uuid = T1.uuid WHERE T1.artist = 'Volkan Ba\u01f5a' AND T2.language = 'French' GROUP BY T1.id ) AS T3"
+    },
+    {
+      "question_id": 523,
+      "db_id": "card_games",
+      "difficulty": "challenging",
+      "category": "execution_error",
+      "question": "What is the annual average number of sets that were released between 1/1/2012 to 12/31/2015? Indicate the common langugage of the card.",
+      "predicted_sql": "SELECT AVG(COUNT(*)) OVER (PARTITION BY strftime('%Y', releaseDate)) AS average_sets_per_year, (SELECT language FROM foreign_data WHERE multiverseid IN (SELECT multiverseid FROM sets WHERE releaseDate BETWEEN '2012-01-01' AND '2015-12-31') GROUP BY language ORDER BY COUNT(*) DESC LIMIT 1) AS common_language FROM sets WHERE releaseDate BETWEEN '2012-01-01' AND '2015-12-31'",
+      "gold_sql": "SELECT (CAST(SUM(T1.id) AS REAL) / COUNT(T1.id)) / 4, T2.language FROM sets AS T1 INNER JOIN set_translations AS T2 ON T1.id = T2.id WHERE T1.releaseDate BETWEEN '2012-01-01' AND '2015-12-31' GROUP BY T1.releaseDate ORDER BY COUNT(T2.language) DESC LIMIT 1"
+    },
+    {
+      "question_id": 525,
+      "db_id": "card_games",
+      "difficulty": "simple",
+      "category": "value_matching",
+      "question": "Find the uuid of cards in which the old school format is restricted or banned.",
+      "predicted_sql": "SELECT uuid FROM legalities WHERE format = 'oldschool' AND status IN ('banned', 'restricted')",
+      "gold_sql": "SELECT uuid FROM legalities WHERE format = 'oldschool' AND (status = 'Banned' OR status = 'Restricted')"
+    },
+    {
+      "question_id": 581,
+      "db_id": "codebase_community",
+      "difficulty": "moderate",
+      "category": "other",
+      "question": "Who is the editor of the post titled 'Open source tools for visualizing multi-dimensional data?'",
+      "predicted_sql": "SELECT T2.DisplayName FROM posts AS T1 INNER JOIN users AS T2 ON T1.LastEditorUserId = T2.Id WHERE T1.Title = 'Open source tools for visualizing multi-dimensional data?'",
+      "gold_sql": "SELECT T2.DisplayName FROM posts AS T1 INNER JOIN users AS T2 ON T1.OwnerUserId = T2.Id WHERE T1.Title = 'Open source tools for visualizing multi-dimensional data?'"
+    },
+    {
+      "question_id": 646,
+      "db_id": "codebase_community",
+      "difficulty": "simple",
+      "category": "other",
+      "question": "Describe the post title which got positive comments and display names of the users who posted those comments.",
+      "predicted_sql": "SELECT T1.Title, T2.UserDisplayName FROM posts AS T1 INNER JOIN comments AS T2 ON T2.PostId = T1.Id WHERE T2.Score > 60",
+      "gold_sql": "SELECT T1.Title, T2.UserDisplayName FROM posts AS T1 INNER JOIN comments AS T2 ON T2.PostId = T2.Id WHERE T1.Score > 60"
+    },
+    {
+      "question_id": 682,
+      "db_id": "codebase_community",
+      "difficulty": "moderate",
+      "category": "execution_error",
+      "question": "Which is the most valuable post in 2010? Please give its id and the owner's display name.",
+      "predicted_sql": "SELECT T2.OwnerUserId, T1.DisplayName FROM users AS T1 INNER JOIN posts AS T2 ON T1.Id = T2.OwnerUserId WHERE STRFTIME('%Y', T2.CreationDate) = '2010' ORDER BY T2.FavoriteCount DESC LIMIT 1",
+      "gold_sql": "SELECT T2.OwnerUserId, T1.DisplayName FROM users AS T1 INNER JOIN posts AS T2 ON T1.Id = T2.OwnerUserId WHERE STRFTIME('%Y', T1.CreationDate) = '2010' ORDER BY T2.FavoriteCount DESC LIMIT 1"
+    },
+    {
+      "question_id": 928,
+      "db_id": "formula_1",
+      "difficulty": "moderate",
+      "category": "wrong_columns",
+      "question": "Which driver ranked the first in the Canadian Grand Prix in 2007? Please give his reference name.",
+      "predicted_sql": "SELECT T3.driverRef FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T1.name = 'Canadian Grand Prix' AND T2.rank = 1 AND T1.year = 2007",
+      "gold_sql": "SELECT T3.forename, T3.surname, T3.driverRef FROM races AS T1 INNER JOIN results AS T2 ON T2.raceId = T1.raceId INNER JOIN drivers AS T3 ON T3.driverId = T2.driverId WHERE T1.name = 'Canadian Grand Prix' AND T2.rank = 1 AND T1.year = 2007"
+    },
+    {
+      "question_id": 978,
+      "db_id": "formula_1",
+      "difficulty": "simple",
+      "category": "aggregation_error",
+      "question": "How many times the circuits were held in Austria? Please give their location and coordinates.",
+      "predicted_sql": "SELECT COUNT(*), T1.location, T1.lat, T1.lng FROM circuits AS T1 WHERE T1.country = 'Austria' GROUP BY T1.location, T1.lat, T1.lng",
+      "gold_sql": "SELECT DISTINCT location, lat, lng FROM circuits WHERE country = 'Austria'"
+    },
+    {
+      "question_id": 1014,
+      "db_id": "formula_1",
+      "difficulty": "challenging",
+      "category": "aggregation_error",
+      "question": "Please list the lap records for the circuits in Italy.",
+      "predicted_sql": "WITH fastest_lap_times AS ( SELECT T1.raceId, T1.FastestLapTime, (CAST(SUBSTR(T1.FastestLapTime, 1, INSTR(T1.FastestLapTime, ':') - 1) AS REAL) * 60) + (CAST(SUBSTR(T1.FastestLapTime, INSTR(T1.FastestLapTime, ':') + 1, INSTR(T1.FastestLapTime, '.') - INSTR(T1.FastestLapTime, ':') - 1) AS REAL)) + (CAST(SUBSTR(T1.FastestLapTime, INSTR(T1.FastestLapTime, '.') + 1) AS REAL) / 1000) as time_in_seconds FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId INNER JOIN circuits AS T3 ON T2.circuitId = T3.circuitId WHERE T3.country = 'Italy' ) SELECT FastestLapTime FROM fastest_lap_times ORDER BY time_in_seconds ASC",
+      "gold_sql": "WITH fastest_lap_times AS (SELECT T1.raceId, T1.FastestLapTime, (CAST(SUBSTR(T1.FastestLapTime, 1, INSTR(T1.FastestLapTime, ':') - 1) AS REAL) * 60) + (CAST(SUBSTR(T1.FastestLapTime, INSTR(T1.FastestLapTime, ':') + 1, INSTR(T1.FastestLapTime, '.') - INSTR(T1.FastestLapTime, ':') - 1) AS REAL)) + (CAST(SUBSTR(T1.FastestLapTime, INSTR(T1.FastestLapTime, '.') + 1) AS REAL) / 1000) as time_in_seconds FROM results AS T1 WHERE T1.FastestLapTime IS NOT NULL ) SELECT T1.FastestLapTime as lap_record FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId INNER JOIN circuits AS T3 on T2.circuitId = T3.circuitId INNER JOIN (SELECT MIN(fastest_lap_times.time_in_seconds) as min_time_in_seconds FROM fastest_lap_times INNER JOIN races AS T2 on fastest_lap_times.raceId = T2.raceId INNER JOIN circuits AS T3 on T2.circuitId = T3.circuitId WHERE T3.country = 'Italy' ) AS T4 ON (CAST(SUBSTR(T1.FastestLapTime, 1, INSTR(T1.FastestLapTime, ':') - 1) AS REAL) * 60) + (CAST(SUBSTR(T1.FastestLapTime, INSTR(T1.FastestLapTime, ':') + 1, INSTR(T1.FastestLapTime, '.') - INSTR(T1.FastestLapTime, ':') - 1) AS REAL)) + (CAST(SUBSTR(T1.FastestLapTime, INSTR(T1.FastestLapTime, '.') + 1) AS REAL) / 1000) = T4.min_time_in_seconds LIMIT 1"
+    },
+    {
+      "question_id": 1023,
+      "db_id": "european_football_2",
+      "difficulty": "moderate",
+      "category": "join_path_error",
+      "question": "Among the players with an overall rating between 60 to 65, how many players whose going to be in all of your attack moves instead of defensing?",
+      "predicted_sql": "SELECT COUNT(*) FROM Player JOIN Player_Attributes ON Player.player_api_id = Player_Attributes.player_api_id WHERE Player_Attributes.overall_rating BETWEEN 60 AND 65 AND Player_Attributes.defensive_work_rate = 'Low'",
+      "gold_sql": "SELECT COUNT(id) FROM Player_Attributes WHERE overall_rating BETWEEN 60 AND 65 AND defensive_work_rate = 'low'"
+    },
+    {
+      "question_id": 1057,
+      "db_id": "european_football_2",
+      "difficulty": "moderate",
+      "category": "execution_error",
+      "question": "Calculate the average home team goal in the 2010/2011 season in the country of Poland.",
+      "predicted_sql": "SELECT AVG(home_team_goal) FROM Match JOIN League ON Match.league_id = League.id JOIN Country ON Match.country_id = Country.id WHERE League.season = '2010/2011' AND Country.name = 'Poland'",
+      "gold_sql": "SELECT CAST(SUM(t2.home_team_goal) AS REAL) / COUNT(t2.id) FROM Country AS t1 INNER JOIN Match AS t2 ON t1.id = t2.country_id WHERE t1.name = 'Poland' AND t2.season = '2010/2011'"
+    },
+    {
+      "question_id": 1064,
+      "db_id": "european_football_2",
+      "difficulty": "simple",
+      "category": "other",
+      "question": "List out of players whose preferred foot is left.",
+      "predicted_sql": "SELECT Player.player_api_id, Player.player_name FROM Player JOIN Player_Attributes ON Player.player_api_id = Player_Attributes.player_api_id WHERE Player_Attributes.preferred_foot = 'left'",
+      "gold_sql": "SELECT DISTINCT t1.id, t1.player_name FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_api_id = t2.player_api_id WHERE t2.preferred_foot = 'left'"
+    },
+    {
+      "question_id": 1069,
+      "db_id": "european_football_2",
+      "difficulty": "simple",
+      "category": "join_path_error",
+      "question": "Which football player has the shortest height?",
+      "predicted_sql": "SELECT p.player_name, p.height FROM Player p JOIN Player_Attributes pa ON p.player_api_id = pa.player_api_id ORDER BY p.height ASC LIMIT 1",
+      "gold_sql": "SELECT player_name FROM player ORDER BY height ASC LIMIT 1"
+    },
+    {
+      "question_id": 1093,
+      "db_id": "european_football_2",
+      "difficulty": "moderate",
+      "category": "other",
+      "question": "What is the average overall rating of the players born before the year 1986?",
+      "predicted_sql": "SELECT AVG(Player_Attributes.overall_rating) FROM Player_Attributes JOIN Player ON Player_Attributes.player_api_id = Player.player_api_id WHERE strftime('%Y', Player.birthday) < '1986'",
+      "gold_sql": "SELECT SUM(t2.overall_rating) / COUNT(t1.id) FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_api_id = t2.player_api_id WHERE SUBSTR(t1.birthday, 1, 4) < '1986'"
+    },
+    {
+      "question_id": 1114,
+      "db_id": "european_football_2",
+      "difficulty": "challenging",
+      "category": "other",
+      "question": "What was the average overall rating for Marko Arnautovic from 2007/2/22 to 2016/4/21?",
+      "predicted_sql": "SELECT AVG(Player_Attributes.overall_rating) FROM Player_Attributes JOIN Player ON Player_Attributes.player_api_id = Player.player_api_id WHERE Player.player_name = 'Marko Arnautovic' AND Player_Attributes.date BETWEEN '2007-02-22' AND '2016-04-21'",
+      "gold_sql": "SELECT CAST(SUM(t2.overall_rating) AS REAL) / COUNT(t2.id) FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_fifa_api_id = t2.player_fifa_api_id WHERE t1.player_name = 'Marko Arnautovic' AND SUBSTR(t2.`date`, 1, 10) BETWEEN '2007-02-22' AND '2016-04-21'"
+    },
+    {
+      "question_id": 1131,
+      "db_id": "european_football_2",
+      "difficulty": "simple",
+      "category": "execution_error",
+      "question": "What is the average heights of Italy players?",
+      "predicted_sql": "SELECT AVG(T2.height) AS average_height FROM Player AS T1 JOIN Player_Attributes AS T2 ON T1.player_api_id = T2.player_api_id JOIN Match AS T3 ON T1.player_api_id IN (T3.away_player_1, T3.away_player_2, T3.away_player_3, T3.away_player_4, T3.away_player_5, T3.away_player_6, T3.away_player_7, T3.away_player_8, T3.away_player_9, T3.away_player_10, T3.away_player_11, T3.home_player_1, T3.home_player_2, T3.home_player_3, T3.home_player_4, T3.home_player_5, T3.home_player_6, T3.home_player_7, T3.home_player_8, T3.home_player_9, T3.home_player_10, T3.home_player_11) JOIN Country AS T4 ON T3.country_id = T4.country_id WHERE T4.name = 'Italy'",
+      "gold_sql": "SELECT CAST(SUM(T1.height) AS REAL) / COUNT(T1.id) FROM Player AS T1 INNER JOIN Match AS T2 ON T1.id = T2.id INNER JOIN Country AS T3 ON T2.country_id = T3.ID WHERE T3.NAME = 'Italy'"
+    },
+    {
+      "question_id": 1135,
+      "db_id": "european_football_2",
+      "difficulty": "moderate",
+      "category": "execution_error",
+      "question": "Please provide top five football players' IDs who are among the lowest potential players and prefer to use the right foot when attacking.",
+      "predicted_sql": "SELECT p.player_api_id FROM Player p JOIN Player_Attributes pa ON p.player_api_id = pa.player_api_id WHERE pa.potential = (SELECT MIN(potential) FROM Player_Attributes) AND p.preferred_foot = 'right' LIMIT 5",
+      "gold_sql": "SELECT id FROM Player_Attributes WHERE preferred_foot = 'right' ORDER BY potential DESC LIMIT 5"
+    },
+    {
+      "question_id": 1144,
+      "db_id": "european_football_2",
+      "difficulty": "simple",
+      "category": "wrong_columns",
+      "question": "Please state the finishing rate and curve score of the player who has the heaviest weight.",
+      "predicted_sql": "SELECT finishing, curve FROM Player JOIN Player_Attributes ON Player.player_api_id = Player_Attributes.player_api_id ORDER BY Player.weight DESC LIMIT 1",
+      "gold_sql": "SELECT id, finishing, curve FROM Player_Attributes WHERE player_api_id = ( SELECT player_api_id FROM Player ORDER BY weight DESC LIMIT 1 ) LIMIT 1"
+    },
+    {
+      "question_id": 1191,
+      "db_id": "thrombosis_prediction",
+      "difficulty": "challenging",
+      "category": "join_path_error",
+      "question": "What percentage of male patients who first presented to the hospital in 1981 were diagnosed with BEHCET?",
+      "predicted_sql": "SELECT CAST(SUM(CASE WHEN T1.Diagnosis = 'BEHCET' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(T1.ID) FROM Patient AS T1 INNER JOIN Examination AS T2 ON T1.ID = T2.ID WHERE STRFTIME('%Y', T1.`First Date`) = '1981' AND T1.SEX = 'M'",
+      "gold_sql": "SELECT CAST(SUM(CASE WHEN Diagnosis = 'BEHCET' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(ID) FROM Patient WHERE STRFTIME('%Y', `First Date`) = '1981' AND SEX = 'M'"
+    },
+    {
+      "question_id": 1267,
+      "db_id": "thrombosis_prediction",
+      "difficulty": "moderate",
+      "category": "other",
+      "question": "Among the patients with normal anti-SM, how many of them does not have thrombosis?",
+      "predicted_sql": "SELECT COUNT(T1.ID) FROM Examination AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.SM IN ('negative', '+-') AND T1.Thrombosis = 0",
+      "gold_sql": "SELECT COUNT(T1.ID) FROM Examination AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.SM IN ('negative','0') AND T1.Thrombosis = 0"
+    },
+    {
+      "question_id": 1271,
+      "db_id": "thrombosis_prediction",
+      "difficulty": "moderate",
+      "category": "other",
+      "question": "How many patients with a normal anti-SSA came to the hospital before 2000?",
+      "predicted_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.SSA IN ('negative', '0') AND STRFTIME('%Y', T1.`First Date`) < '2000'",
+      "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.SSA IN ('negative', '0') AND STRFTIME('%Y', T2.Date) < '2000'"
+    },
+    {
+      "question_id": 1311,
+      "db_id": "thrombosis_prediction",
+      "difficulty": "moderate",
+      "category": "other",
+      "question": "How many patients with severe thrombosis have a normal prothrombin time?",
+      "predicted_sql": "SELECT COUNT(T1.ID) FROM Patient AS T1 INNER JOIN Examination AS T2 ON T1.ID = T2.ID INNER JOIN Laboratory AS T3 ON T1.ID = T3.ID WHERE T2.Thrombosis = 2 AND T3.PT < 14",
+      "gold_sql": "SELECT COUNT(T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID INNER JOIN Examination AS T3 ON T1.ID = T3.ID WHERE T2.PT < 14 AND T3.Thrombosis < 3 AND T3.Thrombosis > 0"
+    },
+    {
+      "question_id": 1325,
+      "db_id": "student_club",
+      "difficulty": "simple",
+      "category": "empty_result",
+      "question": "What is the most expensive item that was spent in support of club events?",
+      "predicted_sql": "SELECT expense_description FROM expense WHERE expense_description LIKE '%club events%' ORDER BY cost DESC LIMIT 1",
+      "gold_sql": "SELECT expense_description FROM expense ORDER BY cost DESC LIMIT 1"
+    }
+  ]
+}

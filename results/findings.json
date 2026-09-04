@@ -1,0 +1,269 @@
+{
+  "silent_failures_baseline": {
+    "n_total": 500,
+    "n_wrong": 273,
+    "silent_failures": 162,
+    "silent_share_of_errors": 0.5934065934065934,
+    "silent_share_of_all": 0.324,
+    "loud_execution_errors": 82,
+    "empty_results": 29
+  },
+  "silent_failures_final": {
+    "n_total": 500,
+    "n_wrong": 248,
+    "silent_failures": 176,
+    "silent_share_of_errors": 0.7096774193548387,
+    "silent_share_of_all": 0.352,
+    "loud_execution_errors": 44,
+    "empty_results": 28
+  },
+  "per_database": [
+    {
+      "db_id": "thrombosis_prediction",
+      "n": 53,
+      "accuracy": 22.641509433962263,
+      "ci_low": 13.454499977265527,
+      "ci_high": 35.526528002242436,
+      "n_tables": 3,
+      "n_columns": 64,
+      "n_foreign_keys": 2
+    },
+    {
+      "db_id": "california_schools",
+      "n": 30,
+      "accuracy": 23.333333333333332,
+      "ci_low": 11.792239210501233,
+      "ci_high": 40.92867233032427,
+      "n_tables": 3,
+      "n_columns": 89,
+      "n_foreign_keys": 2
+    },
+    {
+      "db_id": "european_football_2",
+      "n": 42,
+      "accuracy": 30.952380952380953,
+      "ci_low": 19.070926519722732,
+      "ci_high": 46.0262777663406,
+      "n_tables": 7,
+      "n_columns": 199,
+      "n_foreign_keys": 31
+    },
+    {
+      "db_id": "financial",
+      "n": 34,
+      "accuracy": 35.294117647058826,
+      "ci_low": 21.487714895296072,
+      "ci_high": 52.08634116998658,
+      "n_tables": 8,
+      "n_columns": 55,
+      "n_foreign_keys": 8
+    },
+    {
+      "db_id": "toxicology",
+      "n": 47,
+      "accuracy": 40.42553191489362,
+      "ci_low": 27.639828961388176,
+      "ci_high": 54.658131763687344,
+      "n_tables": 4,
+      "n_columns": 11,
+      "n_foreign_keys": 5
+    },
+    {
+      "db_id": "formula_1",
+      "n": 57,
+      "accuracy": 42.10526315789474,
+      "ci_low": 30.187399753051857,
+      "ci_high": 55.020089859318624,
+      "n_tables": 13,
+      "n_columns": 94,
+      "n_foreign_keys": 19
+    },
+    {
+      "db_id": "debit_card_specializing",
+      "n": 20,
+      "accuracy": 45.0,
+      "ci_low": 25.819502085709296,
+      "ci_high": 65.79179916924002,
+      "n_tables": 5,
+      "n_columns": 21,
+      "n_foreign_keys": 2
+    },
+    {
+      "db_id": "card_games",
+      "n": 62,
+      "accuracy": 48.38709677419355,
+      "ci_low": 36.409654206505294,
+      "ci_high": 60.55275253938181,
+      "n_tables": 6,
+      "n_columns": 115,
+      "n_foreign_keys": 4
+    },
+    {
+      "db_id": "codebase_community",
+      "n": 61,
+      "accuracy": 52.459016393442624,
+      "ci_low": 40.156941715311014,
+      "ci_high": 64.46971771320402,
+      "n_tables": 8,
+      "n_columns": 71,
+      "n_foreign_keys": 13
+    },
+    {
+      "db_id": "student_club",
+      "n": 52,
+      "accuracy": 61.53846153846154,
+      "ci_low": 47.959626940741785,
+      "ci_high": 73.52972866511477,
+      "n_tables": 8,
+      "n_columns": 48,
+      "n_foreign_keys": 8
+    },
+    {
+      "db_id": "superhero",
+      "n": 42,
+      "accuracy": 88.0952380952381,
+      "ci_low": 74.99931819289246,
+      "ci_high": 94.8062732349809,
+      "n_tables": 10,
+      "n_columns": 31,
+      "n_foreign_keys": 11
+    }
+  ],
+  "schema_size_correlation": {
+    "n_tables": {
+      "pearson_r": 0.5457121319339163,
+      "p_value": 0.08247683323271944,
+      "significant": false
+    },
+    "n_columns": {
+      "pearson_r": -0.368130937365792,
+      "p_value": 0.26530979116423414,
+      "significant": false
+    },
+    "n_foreign_keys": {
+      "pearson_r": 0.05019610341399835,
+      "p_value": 0.8834757692393925,
+      "significant": false
+    }
+  },
+  "evidence_by_difficulty": {
+    "overall": {
+      "delta_points": 20.0,
+      "helped": 14,
+      "hurt": 4,
+      "p_value": 0.0308837890625
+    },
+    "by_difficulty": {
+      "simple": {
+        "helped": 7,
+        "hurt": 3,
+        "n": 31,
+        "net_points": 12.903225806451612
+      },
+      "moderate": {
+        "helped": 6,
+        "hurt": 1,
+        "n": 15,
+        "net_points": 33.333333333333336
+      },
+      "challenging": {
+        "helped": 1,
+        "hurt": 0,
+        "n": 4,
+        "net_points": 25.0
+      }
+    }
+  },
+  "failure_transitions": {
+    "n": 500,
+    "fixed": 61,
+    "broken": 36,
+    "net": 25,
+    "churn_ratio": 3.88,
+    "fixed_by_difficulty": {
+      "simple": 39,
+      "moderate": 18,
+      "challenging": 4
+    },
+    "broken_by_difficulty": {
+      "simple": 23,
+      "challenging": 6,
+      "moderate": 7
+    },
+    "p_value": 0.014389633007095661,
+    "significant": true
+  },
+  "agreement_vs_difficulty": {
+    "mean_agreement": {
+      "simple": 0.7777777777777778,
+      "moderate": 0.6833333333333333,
+      "challenging": 0.7166666666666667
+    },
+    "counts": {
+      "simple": 120,
+      "moderate": 60,
+      "challenging": 20
+    },
+    "decreases_with_difficulty": false
+  },
+  "cost_per_correct": [
+    {
+      "tag": "baseline-eval500",
+      "n": 500,
+      "correct": 227,
+      "accuracy": 45.4,
+      "total_generation_seconds": 4582.259593486786,
+      "seconds_per_correct": 20.186165610073946,
+      "nominal_usd": 0.0,
+      "mean_prompt_tokens": 2312.72
+    },
+    {
+      "tag": "final-eval500",
+      "n": 500,
+      "correct": 252,
+      "accuracy": 50.4,
+      "total_generation_seconds": 9855.311834335327,
+      "seconds_per_correct": 39.10838029498146,
+      "nominal_usd": 0.0,
+      "mean_prompt_tokens": 2317.946
+    },
+    {
+      "tag": "k3-eval200",
+      "n": 200,
+      "correct": 110,
+      "accuracy": 55.0,
+      "total_generation_seconds": 6099.776590585709,
+      "seconds_per_correct": 55.45251445987008,
+      "nominal_usd": 0.0,
+      "mean_prompt_tokens": 6954.6
+    }
+  ],
+  "question_length": {
+    "pearson_r": -0.22444905707068857,
+    "p_value": 3.9549214128221326e-07,
+    "significant": true,
+    "by_bucket": {
+      "1-10": {
+        "n": 133,
+        "accuracy": 60.902255639097746
+      },
+      "11-20": {
+        "n": 306,
+        "accuracy": 41.50326797385621
+      },
+      "21-30": {
+        "n": 54,
+        "accuracy": 33.333333333333336
+      },
+      "31+": {
+        "n": 7,
+        "accuracy": 14.285714285714286
+      }
+    }
+  },
+  "value_matching": {
+    "zero_row_failures_with_string_filter": 24,
+    "recoverable_by_relaxing_the_match": 2,
+    "share_recoverable": 0.08333333333333333
+  }
+}

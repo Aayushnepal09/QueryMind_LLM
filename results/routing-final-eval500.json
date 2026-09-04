@@ -1,0 +1,194 @@
+{
+  "curve": [
+    {
+      "threshold": 0.0,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.05,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.1,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.15,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.2,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.25,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.3,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.35,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.4,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.45,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.5,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.55,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.6,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.65,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.7,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.75,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.8,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.85,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.9,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 0.95,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    },
+    {
+      "threshold": 1.0,
+      "pct_routed": 0.0,
+      "pct_errors_caught": 0.0,
+      "n_routed": 0,
+      "errors_caught": 0,
+      "auto_accuracy": 50.4,
+      "n_auto": 500
+    }
+  ],
+  "operating_point": null
+}

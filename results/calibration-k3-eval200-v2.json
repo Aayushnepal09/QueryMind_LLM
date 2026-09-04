@@ -1,0 +1,72 @@
+{
+  "label": "k3-eval200 v2 (calibrated, 200 calibration questions)",
+  "n": 200,
+  "brier_score": 0.19433421224042963,
+  "expected_calibration_error": 0.049934052079142685,
+  "base_accuracy": 0.55,
+  "reliability_curve": [
+    {
+      "bin_lower": 0.0,
+      "bin_upper": 0.1,
+      "mean_predicted": 0.01606689436074556,
+      "observed_accuracy": 0.047619047619047616,
+      "count": 21
+    },
+    {
+      "bin_lower": 0.2,
+      "bin_upper": 0.30000000000000004,
+      "mean_predicted": 0.25596262572538575,
+      "observed_accuracy": 0.25,
+      "count": 8
+    },
+    {
+      "bin_lower": 0.30000000000000004,
+      "bin_upper": 0.4,
+      "mean_predicted": 0.37161987877158514,
+      "observed_accuracy": 0.38461538461538464,
+      "count": 26
+    },
+    {
+      "bin_lower": 0.4,
+      "bin_upper": 0.5,
+      "mean_predicted": 0.4335517542785777,
+      "observed_accuracy": 0.4166666666666667,
+      "count": 12
+    },
+    {
+      "bin_lower": 0.5,
+      "bin_upper": 0.6000000000000001,
+      "mean_predicted": 0.550806363234822,
+      "observed_accuracy": 0.6666666666666666,
+      "count": 18
+    },
+    {
+      "bin_lower": 0.6000000000000001,
+      "bin_upper": 0.7000000000000001,
+      "mean_predicted": 0.6460106072747341,
+      "observed_accuracy": 0.58,
+      "count": 50
+    },
+    {
+      "bin_lower": 0.7000000000000001,
+      "bin_upper": 0.8,
+      "mean_predicted": 0.7620370014217144,
+      "observed_accuracy": 0.7142857142857143,
+      "count": 21
+    },
+    {
+      "bin_lower": 0.8,
+      "bin_upper": 0.9,
+      "mean_predicted": 0.8575455384970203,
+      "observed_accuracy": 0.8048780487804879,
+      "count": 41
+    },
+    {
+      "bin_lower": 0.9,
+      "bin_upper": 1.0,
+      "mean_predicted": 0.9373833151414518,
+      "observed_accuracy": 1.0,
+      "count": 3
+    }
+  ]
+}

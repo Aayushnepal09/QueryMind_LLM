@@ -1,0 +1,16 @@
+{
+  "label": "final-eval500 v1 (agreement only)",
+  "n": 500,
+  "brier_score": 0.496,
+  "expected_calibration_error": 0.496,
+  "base_accuracy": 0.504,
+  "reliability_curve": [
+    {
+      "bin_lower": 0.9,
+      "bin_upper": 1.0,
+      "mean_predicted": 1.0,
+      "observed_accuracy": 0.504,
+      "count": 500
+    }
+  ]
+}
