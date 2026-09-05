@@ -60,7 +60,7 @@ mcp = [
 
 [project.urls]
 Repository = "https://github.com/Aayushnepal09/QueryMind_LLM"
-Results = "https://github.com/Aayushnepal09/QueryMind_LLM/blob/sqlsentinel/results/RESULTS.md"
+Results = "https://github.com/Aayushnepal09/QueryMind_LLM/blob/main/results/RESULTS.md"
 
 [project.scripts]
 sqlsentinel-eval = "sqlsentinel.eval.__main__:main"
